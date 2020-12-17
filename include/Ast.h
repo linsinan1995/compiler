@@ -11,10 +11,10 @@
 #include "helper.h"
 #include "Parser.h"
 
-class Expression_AST;
-class Integer_AST;
-class Variable_AST;
-class BinaryExprAST;
+struct Expression_AST;
+struct Integer_AST;
+struct Variable_AST;
+struct Binary_expr_AST;
 struct Define_AST;
 struct Function_call_AST;
 struct If_AST;
@@ -26,17 +26,17 @@ struct While_AST;
 struct Function_proto_AST;
 
 using ptr_Function_proto_AST = std::unique_ptr<Function_proto_AST>;
-using ptr_Function_call_AST = std::unique_ptr<Function_call_AST>;
-using ptr_Function_AST = std::unique_ptr<Function_AST>;
-using ptr_Variable_AST = std::unique_ptr<Variable_AST>;
-using ptr_Expression_AST = std::unique_ptr<Expression_AST>;
-using ptr_BinaryExprAST = std::unique_ptr<BinaryExprAST>;
-using ptr_Integer_AST = std::unique_ptr<Integer_AST>;
-using ptr_Block_AST = std::unique_ptr<Block_AST>;
-using ptr_Else_AST = std::unique_ptr<Else_AST>;
-using ptr_Assign_AST = std::unique_ptr<Assign_AST>;
-using ptr_If_AST = std::unique_ptr<If_AST>;
-using ptr_While_AST = std::unique_ptr<While_AST>;
+using ptr_Function_call_AST  = std::unique_ptr<Function_call_AST>;
+using ptr_Function_AST       = std::unique_ptr<Function_AST>;
+using ptr_Variable_AST       = std::unique_ptr<Variable_AST>;
+using ptr_Expression_AST     = std::unique_ptr<Expression_AST>;
+using ptr_BinaryExprAST      = std::unique_ptr<Binary_expr_AST>;
+using ptr_Integer_AST        = std::unique_ptr<Integer_AST>;
+using ptr_Block_AST          = std::unique_ptr<Block_AST>;
+using ptr_Else_AST           = std::unique_ptr<Else_AST>;
+using ptr_Assign_AST         = std::unique_ptr<Assign_AST>;
+using ptr_If_AST             = std::unique_ptr<If_AST>;
+using ptr_While_AST          = std::unique_ptr<While_AST>;
 
 struct Expression_AST {
     virtual ~Expression_AST() = default;
@@ -56,7 +56,7 @@ public:
 
 struct Variable_AST : public Expression_AST {
     raw_string name;
-    Variable_AST(raw_string m_name) : name(m_name) {}
+    explicit Variable_AST(raw_string m_name) : name(m_name) {}
 #ifdef PARSER_TEST
     void print() override { printf("[VAR_EXP] %.*s\n", (int)name.len, name.content); }
 #endif
@@ -127,11 +127,11 @@ struct Function_call_AST : public Expression_AST {
 
 
 
-struct UnaryExprAST : public Expression_AST {
+struct Unary_expr_AST : public Expression_AST {
     ptr_Expression_AST LHS;
-    UnaryExprAST() = default;
-    UnaryExprAST(UnaryExprAST&& expr) = default;
-    UnaryExprAST(ptr_Expression_AST lhs) :
+    Unary_expr_AST() = default;
+    Unary_expr_AST(Unary_expr_AST&& expr) = default;
+    Unary_expr_AST(ptr_Expression_AST lhs) :
             LHS(std::move(lhs))
     {}
 #ifdef PARSER_TEST
@@ -142,7 +142,7 @@ struct UnaryExprAST : public Expression_AST {
 #endif
 };
 
-struct BinaryExprAST : public UnaryExprAST {
+struct Binary_expr_AST : public Unary_expr_AST {
     ptr_Expression_AST RHS;
     Kind op;
 #ifdef PARSER_TEST

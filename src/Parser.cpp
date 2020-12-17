@@ -88,6 +88,7 @@ Parser::v_expr_ptr Parser::parse() {
     return parsed_vec_stmt;
 }
 
+inline
 Parser::Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer))
     {
     }
@@ -183,9 +184,6 @@ Parser::ptr_expr Parser::handle_def_func_statement() {
     // eat close paren
     next();
     return parse_def_func_expr(std::move(var), std::move(proto));
-//    return std::make_unique<ptr_Function_AST> (
-//        std::move(var), std::move(proto), std::move(block), std::move(return_expr)
-//    );
 }
 
 Parser::ptr_assign_expr Parser::parse_assign_expr() {
@@ -209,16 +207,19 @@ Parser::ptr_assign_expr Parser::parse_assign_expr() {
 
 
 // def_stmt -> var id = expression
+inline
 Parser::ptr_expr Parser::handle_def_statement() {
     // eat var
     next();
     return std::unique_ptr<Define_AST>(parse_assign_expr());
 }
 
+inline
 void Parser::next() {
     cur_token = std::move(lexer->next());
 }
 
+inline
 char Parser::peek() {
     return lexer->peek();
 }
@@ -265,7 +266,7 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
 }
 
 Parser::ptr_expr Parser::parse_expr(int prev_prec) {
-    Parser::ptr_expr expr = std::make_unique<UnaryExprAST> (parse_unary_expr());
+    Parser::ptr_expr expr = std::make_unique<Unary_expr_AST> (parse_unary_expr());
 
     next();
 
@@ -279,7 +280,7 @@ Parser::ptr_expr Parser::parse_expr(int prev_prec) {
 
         // eat op
         next();
-        auto bi_expr = std::make_unique<BinaryExprAST> ();
+        auto bi_expr = std::make_unique<Binary_expr_AST> ();
         bi_expr->LHS = std::move(expr);
         bi_expr->op = op;
         bi_expr->RHS = parse_expr(cur_prec+1);
@@ -292,15 +293,17 @@ Parser::ptr_expr Parser::parse_expr(int prev_prec) {
     return expr;
 }
 
-
+inline
 ptr_Integer_AST Parser::parse_int_expr() {
     return std::make_unique<Integer_AST> (get_val_tok_int(cur_token.get()));
 }
 
+inline
 ptr_Variable_AST Parser::parse_id_expr() {
     return std::make_unique<Variable_AST> (cur_token->lexeme);
 }
 
+inline
 Parser::ptr_expr Parser::parse_paren_expr() {
     // eat (
     next();

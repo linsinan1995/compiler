@@ -11,12 +11,13 @@
 #include "helper.h"
 
 class Lexer {
+    using ptr_token = std::unique_ptr<Token>;
+    using ptr_lexer = std::unique_ptr<Lexer>;
     const char *src_code;
 public:
-    void load(const char *m_code) { src_code = m_code;}
-    static std::unique_ptr<Lexer> make_lexer(const char *);
-    Lexer(const char * code) ;
-    std::unique_ptr<Token> next ();
+    ptr_token next ();
+    void load(const char *m_code);
+
     char peek ();
     char eat  ();
     void eat_white_space ();
@@ -26,6 +27,10 @@ public:
     void number             (Token*);
     void uni_operator       (Token*);
     void ambigious_operator (Token*);
+
+public:
+    Lexer(const char * code) ;
+    static ptr_lexer make_lexer(const char *);
 };
 
 
