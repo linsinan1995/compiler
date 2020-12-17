@@ -26,8 +26,8 @@
     X(k_comment),\
     X(k_open_curly),\
     X(k_close_curly),\
-    X(k_open_parent),\
-    X(k_close_parent),\
+    X(k_open_paren),\
+    X(k_close_paren),\
     X(k_unexpected)
 
 

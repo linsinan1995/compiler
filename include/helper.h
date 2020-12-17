@@ -38,10 +38,10 @@ static
 bool is_uni_operator(Token* token, char op) {
     switch (op) {
         case '(':
-            token->kind = k_open_parent;
+            token->kind = k_open_paren;
             return true;
         case ')':
-            token->kind = k_close_parent;
+            token->kind = k_close_paren;
             return true;
         case '+':
             token->kind = op_add;

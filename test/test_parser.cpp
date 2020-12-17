@@ -2,10 +2,6 @@
 // Created by Lin Sinan on 2020-12-16.
 //
 
-//
-// Created by Lin Sinan on 2020-12-13.
-//
-
 #include "Parser.h"
 
 static int TEST_COUNT = 1;

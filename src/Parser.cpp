@@ -29,13 +29,13 @@ ptr_While_AST Parser::parse_while_expr() {
 
     // eat while/if keyword
     next();
-    if (cur_token->kind != k_open_parent) return LogError("Missing an open paren!\n");
+    if (cur_token->kind != k_open_paren) return LogError("Missing an open paren!\n");
     // eat open paren
     next();
 
     while_expr->cond = parse_expr();
 
-    if (cur_token->kind != k_close_parent) return LogError("Missing an close paren!\n");
+    if (cur_token->kind != k_close_paren) return LogError("Missing an close paren!\n");
     // eat close paren
     next();
 
@@ -115,14 +115,14 @@ ptr_Function_proto_AST Parser::parse_func_proto(){
     // eat open paren
     next();
 
-    while (!anyone(cur_token->kind, k_close_parent, k_EOF)) {
+    while (!anyone(cur_token->kind, k_close_paren, k_EOF)) {
         proto->args.emplace_back(parse_id_expr());
         next(); // eat id
         if (cur_token->kind == k_comma) next();
     }
 
     if (cur_token->kind == k_EOF) return {};
-    if (cur_token->kind != k_close_parent) {
+    if (cur_token->kind != k_close_paren) {
         return LogError("Missing close paren in func call parsing\n");
     }
 
@@ -230,7 +230,7 @@ Parser::ptr_expr Parser::parse_unary_expr() {
             return LogError("unknown token when expecting an expression");
         case k_int:
             return parse_int_expr();
-        case k_open_parent:
+        case k_open_paren:
             return parse_paren_expr();
         case k_var:
             if (peek() == '(') {
@@ -250,13 +250,13 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
     // eat open paren
     next();
 
-    while (!anyone(cur_token->kind, k_close_parent, k_EOF)) {
+    while (!anyone(cur_token->kind, k_close_paren, k_EOF)) {
         args.emplace_back(parse_expr());
         if (cur_token->kind == k_comma) next();
     }
 
     if (cur_token->kind == k_EOF) return {};
-    if (cur_token->kind != k_close_parent) {
+    if (cur_token->kind != k_close_paren) {
         LogError("Missing close paren in func call parsing\n");
         return {};
     }
@@ -306,7 +306,7 @@ Parser::ptr_expr Parser::parse_paren_expr() {
     next();
     auto expr = parse_expr();
 
-    if (cur_token->kind != k_close_parent) return LogError("Missing a close paren!\n");
+    if (cur_token->kind != k_close_paren) return LogError("Missing a close paren!\n");
     return expr;
 }
 
