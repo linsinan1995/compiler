@@ -1,0 +1,48 @@
+#define ENUM_DATA_TYPE_KIND_ENTRY \
+    X(kw_if) ,\
+    X(kw_func) ,\
+    X(kw_else) ,\
+    X(kw_return),\
+    X(kw_while),\
+    X(kw_def),\
+    X(op_equal),\
+    X(op_gt),\
+    X(op_lt),\
+    X(op_ge),\
+    X(op_add),\
+    X(op_sub),\
+    X(op_mul),\
+    X(op_div),\
+    X(op_mod),\
+    X(op_pow),\
+    X(op_le),\
+    X(op_assign),\
+    X(k_var),\
+    X(k_int),\
+    X(k_EOF),\
+    X(k_comma),\
+    X(k_new_line),\
+    X(k_semi),\
+    X(k_comment),\
+    X(k_open_curly),\
+    X(k_close_curly),\
+    X(k_open_parent),\
+    X(k_close_parent),\
+    X(k_unexpected)
+
+
+#define ENUM_STATEMENT_KIND_ENTRY \
+    X(k_stmt_if) ,\
+    X(k_stmt_while) ,\
+    X(k_stmt_expression),\
+    X(k_stmt_assign),\
+    X(k_stmt_define)
+
+#define ENUM_EXPRESSION_KIND_ENTRY \
+    X(k_exp_int) ,\
+    X(k_exp_call),\
+    X(k_exp_func_and_call_exp),\
+    X(k_exp_unary) ,\
+    X(k_exp_binary), \
+    X(k_exp_var)
+
