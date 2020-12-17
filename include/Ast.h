@@ -37,6 +37,7 @@ using ptr_Else_AST = std::unique_ptr<Else_AST>;
 using ptr_Assign_AST = std::unique_ptr<Assign_AST>;
 using ptr_If_AST = std::unique_ptr<If_AST>;
 using ptr_While_AST = std::unique_ptr<While_AST>;
+
 struct Expression_AST {
     virtual ~Expression_AST() = default;
 #ifdef PARSER_TEST
@@ -131,7 +132,7 @@ struct UnaryExprAST : public Expression_AST {
     UnaryExprAST() = default;
     UnaryExprAST(UnaryExprAST&& expr) = default;
     UnaryExprAST(ptr_Expression_AST lhs) :
-        LHS(std::move(lhs))
+            LHS(std::move(lhs))
     {}
 #ifdef PARSER_TEST
     void print() override {
@@ -144,10 +145,6 @@ struct UnaryExprAST : public Expression_AST {
 struct BinaryExprAST : public UnaryExprAST {
     ptr_Expression_AST RHS;
     Kind op;
-
-    BinaryExprAST(ptr_Expression_AST lhs, Kind op, ptr_Expression_AST rhs) :
-        UnaryExprAST(std::move(lhs)), op(op), RHS(std::move(rhs))
-    {}
 #ifdef PARSER_TEST
     void print() override {
         printf("[LHS_EXP]\n");

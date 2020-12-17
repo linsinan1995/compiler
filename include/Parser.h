@@ -32,20 +32,15 @@ public:
     ptr_expr handle_def_func_statement();
     ptr_expr handle_if_statement();
     ptr_expr handle_statement();
-//    ptr_expr handle_while_statement();
     ptr_Block_AST parse_block();
-    ptr_expr parse_expr();
+    ptr_expr parse_expr(int prev_prec = 0);
     ptr_expr parse_unary_expr();
     ptr_Variable_AST parse_id_expr();
     ptr_Integer_AST parse_int_expr();
     ptr_expr parse_paren_expr();
-//    std::unique_ptr<UnaryExprAST> ParseBinOpRHS(int , std::unique_ptr<UnaryExprAST>);
 
     static std::unique_ptr<Parser> make_parser(const char *code);
-    static std::nullptr_t LogError(const char *Str) {
-        fprintf(stderr, "LogError: %s\n", Str);
-        return nullptr;
-    }
+
 };
 
 

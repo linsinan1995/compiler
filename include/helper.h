@@ -162,7 +162,6 @@ void panic3(const char *target_tok, const char *tok, const char *loc) {
            target_tok, tok, loc);
 }
 
-
 static
 bool allocate_check(void *ptr, const char *c) {
     if (ptr == nullptr) {
@@ -172,35 +171,21 @@ bool allocate_check(void *ptr, const char *c) {
     return false;
 }
 
-//static int precedence(Kind op) {
-//    switch (op) {
-//        default:
-//            return 0;
-//        case op_equal:
-//        case op_gt:
-//        case op_lt:
-//        case op_ge:
-//        case op_le:
-//            return 3;
-//        case op_add:
-//        case op_sub:
-//            return 4;
-//        case op_mul:
-//        case op_div:
-//        case op_mod:
-//            return 5;
-//        case op_pow:
-//            return 6;
-//    }
-//}
-
 static int get_val_tok_int(Token *tok) {
-    return (int) strtol(tok->lexeme.content, nullptr, 10);
+    return static_cast<int> (strtol(tok->lexeme.content, nullptr, 10));
 }
 
 static void* f_malloc(size_t t) {
     return malloc(t);
 }
 
+static bool is_op(Kind k) {
+    return anyone(k, op_add, op_sub, op_mul, op_div, op_lt,
+                     op_le, op_ge, op_gt, op_mod, op_pow);
+}
 
+static std::nullptr_t LogError(const char *Str) {
+    fprintf(stderr, "LogError: %s\n", Str);
+    return nullptr;
+}
 #endif //COMPILER_HELP_H

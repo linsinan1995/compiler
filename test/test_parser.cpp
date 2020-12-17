@@ -13,14 +13,10 @@ static int TEST_COUNT = 1;
 
 void print_expression(Expression_AST *exp);
 
-//const char *code =
-//        "var x = 12 + x * 3\n"
-//        "var y = x + 1";
-
-//const char *code =
-//        "var x = ((12 + x) * 3) / ((2 - 44) / -4)\n";
 
 const char *code =
+        "var x = (2 + 3) * 4\n"
+        "var x = 2 + 3 * 4\n"
         "func pow(x, y) {\n"
         "   return x^y\n"
         "}\n"
@@ -34,6 +30,11 @@ const char *code =
         "   x = (12 ^ 2) * pow(2,3) \n"
         "   x = fun(x) \n"
         "}";
+
+const char *code2 =
+        "y = 12 + x * 3 + 3\n"
+        "if (z + 23 * (23 - 4) * 4 / (1+2^4)) {}";
+
 
 void driver(std::unique_ptr<Parser> &parser) {
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
@@ -50,5 +51,9 @@ int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
 
     TEST_NAME("simple def")
+    driver(parser);
+
+    TEST_NAME("precedence")
+    parser = Parser::make_parser(code2);
     driver(parser);
 }

@@ -18,10 +18,10 @@
 #include "Parser.h"
 
 static std::map<int, int> precedence {
-        {op_equal, 3}, {op_gt, 3}, {op_lt, 3}, {op_le, 3}, {op_ge, 3},
-        {op_add, 4}, {op_sub, 4},
-        {op_mul, 5}, {op_div, 5}, {op_mod, 5},
-        {op_pow, 6}
+        {op_equal, 30}, {op_gt, 30}, {op_lt, 30}, {op_le, 30}, {op_ge, 30},
+        {op_add, 40}, {op_sub, 40},
+        {op_mul, 50}, {op_div, 50}, {op_mod, 50},
+        {op_pow, 60}
 };
 
 ptr_While_AST Parser::parse_while_expr() {
@@ -30,9 +30,9 @@ ptr_While_AST Parser::parse_while_expr() {
     // eat while/if keyword
     next();
     if (cur_token->kind != k_open_parent) return LogError("Missing an open paren!\n");
-
     // eat open paren
     next();
+
     while_expr->cond = parse_expr();
 
     if (cur_token->kind != k_close_parent) return LogError("Missing an close paren!\n");
@@ -264,69 +264,31 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
     return args;
 }
 
-//std::unique_ptr<UnaryExprAST> Parser::ParseBinOpRHS(int expr_prec, std::unique_ptr<UnaryExprAST> LHS) {
-//    // If this is a binop, find its precedence.
-//    while (true) {
-//        int tok_prec = precedence[cur_token->kind];
-//
-//        // If this is a binop that binds at least as tightly as the current binop,
-//        // consume it, otherwise we are done.
-//        if (tok_prec < expr_prec)
-//            return LHS;
-//
-//        // Okay, we know this is a binop.
-//        Kind BinOp = cur_token->kind;
-//        next(); // eat binop
-//
-//        // Parse the primary expression after the binary operator.
-//        auto RHS = parse_unary_expr();
-//        if (!RHS)
-//            return nullptr;
-//
-//        // If BinOp binds less tightly with RHS than the operator after RHS, let
-//        // the pending operator take RHS as its LHS.
-//        int next_prec = precedence[cur_token->kind];
-//        if (tok_prec < next_prec) {
-//            RHS = ParseBinOpRHS(tok_prec + 1, std::move(RHS));
-//            if (!RHS)
-//                return nullptr;
-//        }
-//
-//        // Merge LHS/RHS.
-//        LHS =
-//                std::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
-//    }
-//}
-Parser::ptr_expr Parser::parse_expr() {
-    auto expr = std::make_unique<UnaryExprAST> ();
-    expr->LHS = parse_unary_expr();
+Parser::ptr_expr Parser::parse_expr(int prev_prec) {
+    Parser::ptr_expr expr = std::make_unique<UnaryExprAST> (parse_unary_expr());
 
     next();
 
-    switch (cur_token->kind) {
-        default:
-#ifdef PARSER_TEST
-            printf("%s \n", names_kind[cur_token->kind]);
-#endif
-        case k_EOF:
-            break;
-        case op_add:
-        case op_sub:
-        case op_mul:
-        case op_div:
-        case op_mod:
-        case op_gt:
-        case op_lt:
-        case op_le:
-        case op_ge:
-        case op_pow:
-            auto op = cur_token->kind;
-            // eat op
-            next();
-            if (auto RHS = parse_expr()) {
-                return std::make_unique<BinaryExprAST> (std::move(expr->LHS), op, std::move(RHS));
-            }
+    while (is_op(cur_token->kind)) {
+        Kind op = cur_token->kind;
+
+        int cur_prec =  precedence[static_cast<int>(op)];
+        if (prev_prec > cur_prec) {
+            return expr;
+        }
+
+        // eat op
+        next();
+        auto bi_expr = std::make_unique<BinaryExprAST> ();
+        bi_expr->LHS = std::move(expr);
+        bi_expr->op = op;
+        bi_expr->RHS = parse_expr(cur_prec+1);
+        expr = std::move(bi_expr);
     }
+
+#ifdef PARSER_TEST
+    printf("%s \n", names_kind[cur_token->kind]);
+#endif
     return expr;
 }
 

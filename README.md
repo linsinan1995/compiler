@@ -7,6 +7,7 @@ A simple compiler project.
   - Parser
 
 - To do
+  - Precedence
   - Code Gen
   - JIT
   - Rich data type
