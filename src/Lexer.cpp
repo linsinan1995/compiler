@@ -4,7 +4,7 @@
  * ------------      ---------      -----------
  * 2020-12-16 15:29   Lin Sinan         None
  *
- * @File    :   lexer.py    
+ * @File    :   Lexer.cpp
  * @Contact :   mynameisxiaou@gmail.com
  * @github  :   https://github.com/linsinan1995
  * @usage   :   
@@ -51,7 +51,7 @@ char Lexer::eat() {
 
 void Lexer::eat_white_space() {
     char ne = peek();
-    while (ne == ' ') {
+    while (is_white_space(ne)) {
         ne = eat();
     }
 }

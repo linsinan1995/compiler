@@ -30,6 +30,12 @@ const char *code2 =
         "var y = 12 + x * 3 + 3\n"
         "if (z + 23 * (23 - 4) * 4 / (1+2^4)) {}";
 
+const char *code3 = 
+        "func x(x, z) {\n"
+        "    return x * z\n"
+        "}\n"
+        "\n"
+        "print(x(1,2))";
 
 void driver(std::unique_ptr<Parser> &parser) {
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
@@ -50,5 +56,9 @@ int main() {
 
     TEST_NAME("precedence")
     parser = Parser::make_parser(code2);
+    driver(parser);
+
+    TEST_NAME("func block")
+    parser = Parser::make_parser(code3);
     driver(parser);
 }
