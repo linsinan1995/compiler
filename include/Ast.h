@@ -8,9 +8,20 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "helper.h"
-#include "Parser.h"
 
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Verifier.h"
+
+#include "helper.h"
 struct Expression_AST;
 struct Integer_AST;
 struct Variable_AST;
@@ -24,6 +35,7 @@ struct Assign_AST;
 struct Function_AST;
 struct While_AST;
 struct Function_proto_AST;
+struct Unary_expr_AST;
 
 using ptr_Function_proto_AST = std::unique_ptr<Function_proto_AST>;
 using ptr_Function_call_AST  = std::unique_ptr<Function_call_AST>;
@@ -37,123 +49,80 @@ using ptr_Else_AST           = std::unique_ptr<Else_AST>;
 using ptr_Assign_AST         = std::unique_ptr<Assign_AST>;
 using ptr_If_AST             = std::unique_ptr<If_AST>;
 using ptr_While_AST          = std::unique_ptr<While_AST>;
+using ptr_Unary_expr_AST     = std::unique_ptr<Unary_expr_AST>;
 
 struct Expression_AST {
     virtual ~Expression_AST() = default;
-#ifdef PARSER_TEST
+
+    virtual llvm::Value *codegen() = 0;
     virtual void print() = 0;
-#endif
 };
 
-class Integer_AST : public Expression_AST {
+struct Integer_AST : public Expression_AST {
 public:
-    int val;
-    Integer_AST(int m_val) : val(m_val) {}
-#ifdef PARSER_TEST
-    void print() override { printf("[INT_EXP] %d\n", val); }
-#endif
+    float val;
+    explicit Integer_AST(float m_val) : val(m_val) {}
+
+    void print() override;
+    llvm::Value* codegen() override;
 };
 
 struct Variable_AST : public Expression_AST {
     raw_string name;
     explicit Variable_AST(raw_string m_name) : name(m_name) {}
-#ifdef PARSER_TEST
-    void print() override { printf("[VAR_EXP] %.*s\n", (int)name.len, name.content); }
-#endif
+
+    void print() override;
+    llvm::Value* codegen() override;
 };
 
 struct Block_AST : public Expression_AST {
     std::vector<ptr_Expression_AST> v_expr;
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[BLOCK]\n");
-        if (v_expr.empty()) printf("empty code block!\n");
-        for (auto &&expr : v_expr) {
-            expr->print();
-        }
-    }
-#endif
+    void print() override;
+    llvm::Value* codegen() override;
 };
 
 struct Function_proto_AST : public Expression_AST {
+    raw_string                    name;
     std::vector<ptr_Variable_AST> args;
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[FUNC_PROTO]\n");
-        printf("(\n");
-        for (int i=0; i < args.size(); i++) {
-            args[i] -> print();
-            if (i < args.size()-1) printf(", \n");
-        }
-        printf(")\n");
-    }
-#endif
+    void print() override;
+    llvm::Function * codegen() override;
 };
 
 struct Function_AST : public Expression_AST {
-    ptr_Variable_AST name;
-    ptr_Block_AST func_body;
-    ptr_Expression_AST return_expr;
-    ptr_Function_proto_AST args;
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[FUNC]\n");
-        printf("func name: \n");
-        name->print();
-        args->print();
-        printf("func body: \n");
-        func_body->print();
-        printf("return: \n");
-        return_expr->print();
-    }
-#endif
+    ptr_Block_AST           func_body;
+    ptr_Expression_AST      return_expr;
+    ptr_Function_proto_AST  args_with_func_name;
+
+    void print() override;
+    llvm::Value* codegen() override;
 };
 
 struct Function_call_AST : public Expression_AST {
     raw_string name;
     std::vector<ptr_Expression_AST> args;
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[FUNC_CALL]\n");
-        printf("func : %.*s (\n", (int)name.len, name.content);
-        for (int i=0; i < args.size(); i++) {
-            args[i] -> print();
-            if (i < args.size()-1) printf(", \n");
-        }
-        printf(")\n");
-    }
-#endif
+    void print() override;
+    llvm::Value* codegen() override;
 };
-
-
 
 struct Unary_expr_AST : public Expression_AST {
     ptr_Expression_AST LHS;
+
     Unary_expr_AST() = default;
     Unary_expr_AST(Unary_expr_AST&& expr) = default;
-    Unary_expr_AST(ptr_Expression_AST lhs) :
+    explicit Unary_expr_AST(ptr_Expression_AST lhs) :
             LHS(std::move(lhs))
     {}
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[UNARY_EXP]\n");
-        LHS->print();
-    }
-#endif
+
+    void print() override ;
+    llvm::Value* codegen() override;
 };
 
 struct Binary_expr_AST : public Unary_expr_AST {
     ptr_Expression_AST RHS;
     Kind op;
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[LHS_EXP]\n");
-        LHS->print();
-        printf("[BIN_OP ] %s\n", names_kind[op]);
-        printf("[RHS_EXP]\n");
-        RHS->print();
-    }
-#endif
+
+    void print() override;
+    llvm::Value* codegen() override;
 };
 
 
@@ -162,53 +131,22 @@ struct Define_AST : public Expression_AST {
     ptr_Variable_AST   var;
     ptr_Expression_AST rhs;
 
-    void set_var(raw_string m_name) {
-        var = std::make_unique<Variable_AST>(m_name);
-    }
-
-    Define_AST() = default;
-
-    Define_AST(ptr_Variable_AST m_var, ptr_Expression_AST m_rhs) :
-        var(std::move(m_var)), rhs(std::move(m_rhs))
-    {}
-
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[DEF_STMT]\n");
-        var->print();
-        printf("=\n");
-        rhs->print();
-    }
-#endif
+    llvm::Value* codegen() override;
+    void print() override;
 };
 
 struct Assign_AST : public Define_AST {
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[ASSIGN]\n");
-        var->print();
-        printf("=\n");
-        rhs->print();
-    }
-#endif
+    void print() override;
+    llvm::Value* codegen() override;
 };
-
 
 
 struct If_AST : public Expression_AST {
     ptr_Expression_AST cond;
     ptr_Block_AST      if_block;
 
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[IF_STMT]\n");
-        printf("if ");
-        cond->print();
-        printf(" is equal to 0\n");
-        if_block->print();
-    }
-
-#endif
+    llvm::Value* codegen() override;
+    void print() override;
 
     If_AST() = default;
 
@@ -218,37 +156,29 @@ struct If_AST : public Expression_AST {
 };
 
 struct While_AST: public If_AST  {
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[While_STMT]\n");
-        printf("While ");
-        cond->print();
-        printf(" is equal to 0\n");
-        if_block->print();
-    }
-#endif
+    llvm::Value* codegen() override;
+    void print() override;
 };
 
 struct Else_AST: public If_AST {
     ptr_Block_AST else_block;
 
     Else_AST() = default;
-    Else_AST(Else_AST&& expr) = default;
+
     Else_AST(ptr_Expression_AST m_cond, ptr_Block_AST m_if_block, ptr_Block_AST m_else_block) :
             If_AST(std::move(m_cond), std::move(m_if_block)), else_block(std::move(m_else_block))
     {}
-#ifdef PARSER_TEST
-    void print() override {
-        printf("[IF_STMT]\n");
-        printf("if ");
-        cond->print();
-        printf(" is less than 0\n");
-        printf("[ELSE]\n");
-        else_block->print();
-    }
-#endif
+
+    llvm::Value* codegen() override;
+    void print() override;
 };
 
 
+// Open a new context and module.
+//context = std::make_unique<llvm::LLVMContext>();
+//module = std::make_unique<llvm::Module>("jit", *context);
+
+// Create a new builder for the module.
+//builder = std::make_unique<llvm::IRBuilder<>>(*context);
 
 #endif //COMPILER_EXPRESSION_H

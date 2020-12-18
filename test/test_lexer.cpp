@@ -5,6 +5,8 @@
 #include <cstdio>
 #include "Lexer.h"
 
+static int TEST_COUNT = 1;
+
 #define TEST_NAME(X) printf("==============TEST: %-10s==============\n", X);
 
 const char *code =

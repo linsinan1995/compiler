@@ -144,7 +144,6 @@ std::unique_ptr<Lexer> Lexer::make_lexer(const char *code) {
     return std::make_unique<Lexer>(code);
 }
 
-inline
 void Lexer::load(const char *m_code) {
     src_code = m_code;
 }

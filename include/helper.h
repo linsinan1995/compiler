@@ -13,6 +13,9 @@ inline bool anyone(_DesireType k, _ArgumentType... args) {
     return ((args == k) || ...);
 }
 
+static std::string raw_to_string(raw_string &raw_string) {
+    return std::string(raw_string.content, raw_string.len);
+}
 
 static
 bool is_ambigious_operator(Token* token, char c) {
@@ -171,8 +174,8 @@ bool allocate_check(void *ptr, const char *c) {
     return false;
 }
 
-static int get_val_tok_int(Token *tok) {
-    return static_cast<int> (strtol(tok->lexeme.content, nullptr, 10));
+static float get_val_tok_fp(Token *tok) {
+    return strtof(tok->lexeme.content, nullptr);
 }
 
 static void* f_malloc(size_t t) {
@@ -180,7 +183,7 @@ static void* f_malloc(size_t t) {
 }
 
 static bool is_op(Kind k) {
-    return anyone(k, op_add, op_sub, op_mul, op_div, op_lt,
+    return anyone(k, op_add, op_sub, op_mul, op_div, op_lt, op_equal,
                      op_le, op_ge, op_gt, op_mod, op_pow);
 }
 

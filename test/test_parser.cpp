@@ -9,7 +9,6 @@ static int TEST_COUNT = 1;
 
 void print_expression(Expression_AST *exp);
 
-
 const char *code =
         "var x = (2 + 3) * 4\n"
         "var x = 2 + 3 * 4\n"
@@ -21,14 +20,13 @@ const char *code =
         "if (1+2 >= 3) {\n\n"
         "   # test !\n"
         "   var z = 12 + x * 3\n"
-        "   x = z + 26 % -21\n"
+        "   var x = z + 26 % -21\n"
         "} else {"
-        "   x = (12 ^ 2) * pow(2,3) \n"
-        "   x = fun(x) \n"
+        "   var x = (12 ^ 2) * pow(2,3) \n"
+        "   var x = fun(x) \n"
         "}";
-
 const char *code2 =
-        "y = 12 + x * 3 + 3\n"
+        "var y = 12 + x * 3 + 3\n"
         "if (z + 23 * (23 - 4) * 4 / (1+2^4)) {}";
 
 

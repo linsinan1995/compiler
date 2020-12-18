@@ -9,7 +9,8 @@ A simple compiler project.
     - Precedence
 
 - To do
-  - Code Gen
+  - Code Gen / half
+  - Control flow
   - JIT
   - Rich data type
     - fp

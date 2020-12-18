@@ -8,6 +8,8 @@
 #include "Ast.h"
 #include "Lexer.h"
 
+class Parser;
+
 class Parser {
     using v_expr_ptr = std::vector<std::unique_ptr<Expression_AST>>;
     using ptr_expr = std::unique_ptr<Expression_AST>;
@@ -42,10 +44,10 @@ public:
     ptr_While_AST           parse_while_expr();
     v_expr_ptr              parse_func_call_expr();
     ptr_Function_proto_AST  parse_func_proto();
-    ptr_Function_AST        parse_def_func_expr(ptr_Variable_AST,
-                                                ptr_Function_proto_AST);
+    ptr_Function_AST        parse_def_func_expr(ptr_Function_proto_AST);
 
 public:
+    void read_RT(const char *code);
     Parser(std::unique_ptr<Lexer>);
     static std::unique_ptr<Parser> make_parser(const char *code);
 };

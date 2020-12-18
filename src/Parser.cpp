@@ -45,23 +45,33 @@ ptr_While_AST Parser::parse_while_expr() {
 }
 
 Parser::ptr_expr Parser::handle_statement() {
-    return parse_assign_expr();
-}
 
+    // if var =  expr
+    // if var == expr
+    // if var other op expr
+    //    return parse_assign_expr();
+    auto expr = parse_expr();
+    next();
+    return expr;
+}
+// todo
+//      fix assign & normal expr ambiguous
 Parser::ptr_expr Parser::parse_one_statement() {
     printf("%s\n", names_kind[cur_token->kind]);
     if (cur_token->kind == k_comment) next();
+
     switch (cur_token->kind) {
         default:
-            return nullptr;
-        case k_var:
-            return handle_statement();
+            return parse_expr();
+//        case k_var:
+//            return handle_statement();
         case kw_while:
             return parse_while_expr();
         case kw_if:
-            // todo:
-            //      error assert
             return handle_if_statement();
+        case k_close_paren:
+        case k_close_curly:
+            return nullptr;
         case k_unexpected:
             panic(names_kind[cur_token->kind], "parse");
             return nullptr;
@@ -76,15 +86,15 @@ Parser::ptr_expr Parser::parse_one_statement() {
 
 Parser::v_expr_ptr Parser::parse() {
     Parser::v_expr_ptr parsed_vec_stmt {};
+    Parser::ptr_expr   stmt;
+
+    // get the first token
     next();
 
-    while(true) {
-        if (auto stmt = parse_one_statement()) {
-            parsed_vec_stmt.emplace_back(std::move(stmt));
-        } else {
-            break;
-        }
+    while((stmt = parse_one_statement())) {
+        parsed_vec_stmt.emplace_back(std::move(stmt));
     }
+
     return parsed_vec_stmt;
 }
 
@@ -97,22 +107,34 @@ Parser::Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer))
 ptr_Block_AST Parser::parse_block() {
     auto block = std::make_unique<Block_AST> ();
 
-    if (cur_token->kind != k_open_curly) LogError("Missing an open curly!\n");
+    if (cur_token->kind != k_open_curly)
+        LogError("Missing an open curly!\n");
 
     // eat open curly
     next();
 
     while (cur_token->kind != k_close_curly) {
         block->v_expr.emplace_back(parse_one_statement());
-        if (cur_token->kind == k_EOF)  return LogError("Missing close curly in block parsing!\n");
+
+        if (cur_token->kind == k_EOF)
+            return LogError("Missing close curly in block parsing!\n");
     }
+
     // eat close curly
     next();
     return block;
 }
 
-ptr_Function_proto_AST Parser::parse_func_proto(){
+ptr_Function_proto_AST Parser::parse_func_proto() {
     auto proto = std::make_unique<Function_proto_AST> ();
+
+    proto->name = cur_token->lexeme;
+    // eat func name
+    next();
+
+    if (cur_token->kind != k_open_paren)
+        return LogError("Missing open paren in func proto parsing\n");
+
     // eat open paren
     next();
 
@@ -122,21 +144,21 @@ ptr_Function_proto_AST Parser::parse_func_proto(){
         if (cur_token->kind == k_comma) next();
     }
 
-    if (cur_token->kind == k_EOF) return {};
-    if (cur_token->kind != k_close_paren) {
+    if (cur_token->kind != k_close_paren)
         return LogError("Missing close paren in func call parsing\n");
-    }
 
     return proto;
 }
 
 // block -> { expr_1 \n expr_2 \n ... expr_3 \n return xxx \n }
-ptr_Function_AST Parser::parse_def_func_expr(ptr_Variable_AST name, ptr_Function_proto_AST proto) {
+ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
     auto func = std::make_unique<Function_AST> ();
-    func->name = std::move(name);
-    func->args = std::move(proto);
+
+    func->args_with_func_name = std::move(proto);
     func->func_body = std::make_unique<Block_AST> ();
-    if (cur_token->kind != k_open_curly) LogError("Missing an open curly!\n");
+
+    if (cur_token->kind != k_open_curly)
+        LogError("Missing an open curly!\n");
 
     // eat open curly
     next();
@@ -151,7 +173,9 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Variable_AST name, ptr_Function
                 return LogError("Fail to parse return expr");
         }
         func->func_body->v_expr.emplace_back(parse_id_expr());
-        if (cur_token->kind == k_EOF)  { return nullptr; }
+
+        if (cur_token->kind == k_EOF)
+            return LogError("Fail to parse return expr missing close paren\n");
     }
     // eat close curly
     next();
@@ -177,26 +201,26 @@ Parser::ptr_expr Parser::handle_if_statement() {
 Parser::ptr_expr Parser::handle_def_func_statement() {
     // eat func
     next();
-    auto var = parse_id_expr();
-    // eat func name
-    next();
-    auto proto = parse_func_proto();
+    auto proto  = parse_func_proto();
+
     // eat close paren
     next();
-    return parse_def_func_expr(std::move(var), std::move(proto));
+    return parse_def_func_expr(std::move(proto));
 }
 
 Parser::ptr_assign_expr Parser::parse_assign_expr() {
     auto assign_stmt = std::make_unique<Assign_AST> ();
 
     // check id
-    if (cur_token->kind != k_var) throw std::invalid_argument("expect a identifier");
-    assign_stmt->set_var(cur_token->lexeme);
+    if (cur_token->kind != k_var)
+        throw std::invalid_argument("expect a identifier");
+    assign_stmt->var = std::make_unique<Variable_AST>(cur_token->lexeme);
 
     // eat id
     next();
 
-    if (cur_token->kind != op_assign) throw std::invalid_argument("expect a '='");
+    if (cur_token->kind != op_assign)
+        throw std::invalid_argument("expect a '='");
 
     // eat =
     next();
@@ -223,7 +247,6 @@ inline
 char Parser::peek() {
     return lexer->peek();
 }
-
 
 Parser::ptr_expr Parser::parse_unary_expr() {
     switch (cur_token->kind) {
@@ -256,7 +279,6 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
         if (cur_token->kind == k_comma) next();
     }
 
-    if (cur_token->kind == k_EOF) return {};
     if (cur_token->kind != k_close_paren) {
         LogError("Missing close paren in func call parsing\n");
         return {};
@@ -287,15 +309,12 @@ Parser::ptr_expr Parser::parse_expr(int prev_prec) {
         expr = std::move(bi_expr);
     }
 
-#ifdef PARSER_TEST
-    printf("%s \n", names_kind[cur_token->kind]);
-#endif
     return expr;
 }
 
 inline
 ptr_Integer_AST Parser::parse_int_expr() {
-    return std::make_unique<Integer_AST> (get_val_tok_int(cur_token.get()));
+    return std::make_unique<Integer_AST> (get_val_tok_fp(cur_token.get()));
 }
 
 inline
@@ -309,7 +328,9 @@ Parser::ptr_expr Parser::parse_paren_expr() {
     next();
     auto expr = parse_expr();
 
-    if (cur_token->kind != k_close_paren) return LogError("Missing a close paren!\n");
+    if (cur_token->kind != k_close_paren)
+        return LogError("Missing a close paren!\n");
+
     return expr;
 }
 
@@ -317,3 +338,6 @@ std::unique_ptr<Parser> Parser::make_parser(const char *code) {
     return std::make_unique<Parser> (Lexer::make_lexer(code));
 }
 
+void Parser::read_RT(const char *code) {
+    lexer->load(code);
+}
