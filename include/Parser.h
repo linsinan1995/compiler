@@ -23,17 +23,18 @@ class Parser {
 
 public:
     std::unique_ptr<Token> cur_token;
+    std::unique_ptr<Token> prev_tok;
     std::unique_ptr<Lexer> lexer;
 public:
     v_expr_ptr  parse();
-    ptr_expr    parse_one_statement();
+    ptr_expr    read_one_statement();
 
     ptr_expr            handle_def_statement();
     ptr_expr            handle_def_func_statement();
     ptr_expr            handle_if_statement();
     ptr_expr            handle_statement();
 
-
+    ptr_expr                parse_atom();
     ptr_expr                parse_expr(int prev_prec = 0);
     ptr_expr                parse_unary_expr();
     ptr_Variable_AST        parse_id_expr();
@@ -41,7 +42,7 @@ public:
     ptr_expr                parse_paren_expr();
     ptr_Block_AST           parse_block();
     ptr_assign_expr         parse_assign_expr();
-    ptr_While_AST           parse_while_expr();
+    ptr_While_AST           handle_while_statement();
     v_expr_ptr              parse_func_call_expr();
     ptr_Function_proto_AST  parse_func_proto();
     ptr_Function_AST        parse_def_func_expr(ptr_Function_proto_AST);

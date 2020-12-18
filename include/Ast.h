@@ -37,6 +37,7 @@ struct While_AST;
 struct Function_proto_AST;
 struct Unary_expr_AST;
 
+using ptr_Define_AST         = std::unique_ptr<Define_AST>;
 using ptr_Function_proto_AST = std::unique_ptr<Function_proto_AST>;
 using ptr_Function_call_AST  = std::unique_ptr<Function_call_AST>;
 using ptr_Function_AST       = std::unique_ptr<Function_AST>;
@@ -127,19 +128,18 @@ struct Binary_expr_AST : public Unary_expr_AST {
 
 
 
-struct Define_AST : public Expression_AST {
+struct Assign_AST : public Expression_AST {
     ptr_Variable_AST   var;
     ptr_Expression_AST rhs;
 
+    void print() override;
+    llvm::Value *codegen() override;
+};
+
+struct Define_AST : public Assign_AST {
     llvm::Value* codegen() override;
     void print() override;
 };
-
-struct Assign_AST : public Define_AST {
-    void print() override;
-    llvm::Value* codegen() override;
-};
-
 
 struct If_AST : public Expression_AST {
     ptr_Expression_AST cond;

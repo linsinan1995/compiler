@@ -51,7 +51,7 @@ char Lexer::eat() {
 
 void Lexer::eat_white_space() {
     char ne = peek();
-    while (is_white_space(ne)) {
+    while (ne == ' ') {
         ne = eat();
     }
 }
@@ -129,11 +129,6 @@ void Lexer::ambigious_operator(Token* token) {
         }
 
         eat();
-        token->lexeme.len++;
-    } else if (token->kind == op_sub &&
-               is_digit(peek())) {
-        number(token);
-        token->lexeme.content--; // add '-'
         token->lexeme.len++;
     }
 

@@ -26,7 +26,42 @@ void main_loop(std::unique_ptr<Parser> &parser) {
     } while (1);
 }
 
+void do_lexing(std::unique_ptr<Lexer> &lex) {
+    std::unique_ptr<Token> token = nullptr;
+
+    do {
+        token = lex->next();
+        if (token->kind != k_unexpected &&
+            token->kind != k_EOF)
+            printf("%-20s\t%.*s\n", names_kind[token->kind] , (int)token->lexeme.len, token->lexeme.content);
+        else
+            printf("%s\n", names_kind[token->kind]);
+    } while (token->kind != k_unexpected &&
+             token->kind != k_EOF);
+    printf("============================================\n\n\n");
+}
+
+void main_loop(std::unique_ptr<Lexer> &lexer) {
+    std::string code;
+    do {
+        std::cout << ">> ";
+        if (!std::getline(std::cin >> std::ws, code)) break;
+        lexer->load(code.c_str());
+        do_lexing(lexer);
+    } while (1);
+}
+
 int main() {
-    std::unique_ptr<Parser> parser = Parser::make_parser("");
-    main_loop(parser);
+    int flag;
+    std::cout << "Enter 1     => parser\n"
+                 "Enter other => lexer\n>> ";
+    std::cin >> flag;
+    if (flag == 1) {
+        std::unique_ptr<Parser> parser = Parser::make_parser("");
+        main_loop(parser);
+    } else {
+        std::unique_ptr<Lexer> lexer = Lexer::make_lexer("");
+        main_loop(lexer);
+    }
+
 }

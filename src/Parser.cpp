@@ -24,7 +24,7 @@ static std::map<int, int> precedence {
         {op_pow, 60}
 };
 
-ptr_While_AST Parser::parse_while_expr() {
+ptr_While_AST Parser::handle_while_statement() {
     ptr_While_AST while_expr = std::make_unique<While_AST> ();
 
     // eat while/if keyword
@@ -44,44 +44,41 @@ ptr_While_AST Parser::parse_while_expr() {
     return while_expr;
 }
 
+// var =  expr
+// var == expr
+// func(3) op expr ...
+// var other op expr
+//    return parse_assign_expr();
 Parser::ptr_expr Parser::handle_statement() {
+    if (cur_token->kind != k_var) return parse_expr();
 
-    // if var =  expr
-    // if var == expr
-    // if var other op expr
-    //    return parse_assign_expr();
-    auto expr = parse_expr();
+    prev_tok = std::move(cur_token);
     next();
-    return expr;
-}
-// todo
-//      fix assign & normal expr ambiguous
-Parser::ptr_expr Parser::parse_one_statement() {
-    printf("%s\n", names_kind[cur_token->kind]);
-    if (cur_token->kind == k_comment) next();
 
-    switch (cur_token->kind) {
-        default:
-            return parse_expr();
-//        case k_var:
-//            return handle_statement();
-        case kw_while:
-            return parse_while_expr();
-        case kw_if:
-            return handle_if_statement();
-        case k_close_paren:
-        case k_close_curly:
-            return nullptr;
-        case k_unexpected:
-            panic(names_kind[cur_token->kind], "parse");
-            return nullptr;
-        case k_EOF:
-            return nullptr;
-        case kw_func:
-            return handle_def_func_statement();
-        case kw_def:
-            return handle_def_statement();
+    // assign
+    if (cur_token->kind == op_assign) {
+        auto assign_stmt = std::make_unique<Assign_AST> ();
+        assign_stmt->var = std::make_unique<Variable_AST>(prev_tok->lexeme); // copy
+        prev_tok = nullptr;
+        // eat =
+        next();
+
+        assign_stmt->rhs = std::move(parse_expr());
+        return assign_stmt;
     }
+
+//    // open paren -> f(x)
+//    if (cur_token->kind == k_open_paren) {
+//        auto call_expr = std::make_unique<Function_call_AST> ();
+//        call_expr->name = prev_tok->lexeme;
+//        prev_tok = nullptr;
+//
+//        call_expr->args = parse_func_call_expr();
+//        return call_expr;
+//    }
+
+
+    return parse_expr();
 }
 
 Parser::v_expr_ptr Parser::parse() {
@@ -91,7 +88,7 @@ Parser::v_expr_ptr Parser::parse() {
     // get the first token
     next();
 
-    while((stmt = parse_one_statement())) {
+    while((stmt = read_one_statement())) {
         parsed_vec_stmt.emplace_back(std::move(stmt));
     }
 
@@ -114,7 +111,7 @@ ptr_Block_AST Parser::parse_block() {
     next();
 
     while (cur_token->kind != k_close_curly) {
-        block->v_expr.emplace_back(parse_one_statement());
+        block->v_expr.emplace_back(read_one_statement());
 
         if (cur_token->kind == k_EOF)
             return LogError("Missing close curly in block parsing!\n");
@@ -186,7 +183,7 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
 // if_stmt -> if ( expr ) block
 //            if ( expr ) block else block
 Parser::ptr_expr Parser::handle_if_statement() {
-    ptr_If_AST if_expr = std::unique_ptr<If_AST> (parse_while_expr());
+    ptr_If_AST if_expr = std::unique_ptr<If_AST> (handle_while_statement());
     // if there is a else block
     if (cur_token->kind == kw_else) {
         // eat else
@@ -225,17 +222,21 @@ Parser::ptr_assign_expr Parser::parse_assign_expr() {
     // eat =
     next();
 
-    assign_stmt->rhs = std::move(parse_expr());
+    assign_stmt->rhs = parse_expr();
     return assign_stmt;
 }
-
 
 // def_stmt -> var id = expression
 inline
 Parser::ptr_expr Parser::handle_def_statement() {
     // eat var
     next();
-    return std::unique_ptr<Define_AST>(parse_assign_expr());
+    auto def_expr    = std::make_unique<Define_AST>();
+    auto assign_expr = parse_assign_expr();
+    def_expr->var = std::move(assign_expr->var);
+    def_expr->rhs = std::move(assign_expr->rhs);
+    assign_expr = nullptr;
+    return def_expr;
 }
 
 inline
@@ -245,13 +246,16 @@ void Parser::next() {
 
 inline
 char Parser::peek() {
+    lexer->eat_white_space();
     return lexer->peek();
 }
 
 Parser::ptr_expr Parser::parse_unary_expr() {
+//    std::unique_ptr<Token> tok = prev_tok ? std::move(prev_tok) : std::move(cur_token);
     switch (cur_token->kind) {
         default:
             return LogError("unknown token when expecting an expression");
+        case op_sub:
         case k_int:
             return parse_int_expr();
         case k_open_paren:
@@ -287,15 +291,35 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
     return args;
 }
 
-Parser::ptr_expr Parser::parse_expr(int prev_prec) {
-    Parser::ptr_expr expr = std::make_unique<Unary_expr_AST> (parse_unary_expr());
+Parser::ptr_expr Parser::parse_atom() {
+    if (cur_token->kind == k_open_paren) {
+        auto call_expr = std::make_unique<Function_call_AST> ();
+        call_expr->name = prev_tok->lexeme;
+        prev_tok = nullptr;
 
-    next();
+        call_expr->args = parse_func_call_expr();
+        // eat close paren
+        next();
+        return call_expr;
+    }
+    return std::make_unique<Variable_AST> (prev_tok->lexeme);
+}
+
+Parser::ptr_expr Parser::parse_expr(int prev_prec) {
+    ptr_expr expr;
+
+    if (prev_tok) {
+        expr = parse_atom();
+    } else {
+        expr = std::make_unique<Unary_expr_AST> (parse_unary_expr());
+        // eat id
+        next();
+    }
 
     while (is_op(cur_token->kind)) {
         Kind op = cur_token->kind;
 
-        int cur_prec =  precedence[static_cast<int>(op)];
+        int cur_prec = precedence[static_cast<int>(op)];
         if (prev_prec > cur_prec) {
             return expr;
         }
@@ -306,14 +330,19 @@ Parser::ptr_expr Parser::parse_expr(int prev_prec) {
         bi_expr->LHS = std::move(expr);
         bi_expr->op = op;
         bi_expr->RHS = parse_expr(cur_prec+1);
-        expr = std::move(bi_expr);
+        expr = std::move(bi_expr); // !
     }
-
     return expr;
 }
 
+
 inline
 ptr_Integer_AST Parser::parse_int_expr() {
+    if (cur_token->kind == op_sub) {
+        next();
+        return std::make_unique<Integer_AST> (-1 * get_val_tok_fp(cur_token.get()));
+    }
+
     return std::make_unique<Integer_AST> (get_val_tok_fp(cur_token.get()));
 }
 
@@ -340,4 +369,30 @@ std::unique_ptr<Parser> Parser::make_parser(const char *code) {
 
 void Parser::read_RT(const char *code) {
     lexer->load(code);
+}
+
+Parser::ptr_expr Parser::read_one_statement() {
+    printf("%s\n", names_kind[cur_token->kind]);
+    if (cur_token->kind == k_comment) next();
+
+    switch (cur_token->kind) {
+        default:
+            return handle_statement();
+        case kw_while:
+            return handle_while_statement();
+        case kw_if:
+            return handle_if_statement();
+        case k_close_paren:
+        case k_close_curly:
+            return nullptr;
+        case k_unexpected:
+            if (cur_token->lexeme.content == NULL) return nullptr;
+            return LogError(std::string(names_kind[cur_token->kind]) + std::string(" is unexpected!\n"));
+        case k_EOF:
+            return nullptr;
+        case kw_func:
+            return handle_def_func_statement();
+        case kw_def:
+            return handle_def_statement();
+    }
 }

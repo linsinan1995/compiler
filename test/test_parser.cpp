@@ -11,20 +11,21 @@ void print_expression(Expression_AST *exp);
 
 const char *code =
         "var x = (2 + 3) * 4\n"
-        "var x = 2 + 3 * 4\n"
+        "x = 2 + 3 * 4\n"
         "func pow(x, y) {\n"
         "   return x^y\n"
         "}\n"
         "# test !\n"
-        "var x = ((12+4) * 8) \n"
+        "x = ((12+4) * 8) \n"
         "if (1+2 >= 3) {\n\n"
         "   # test !\n"
         "   var z = 12 + x * 3\n"
-        "   var x = z + 26 % -21\n"
+        "   x = z + 26 % -21\n"
         "} else {"
-        "   var x = (12 ^ 2) * pow(2,3) \n"
-        "   var x = fun(x) \n"
+        "   x = (12 ^ 2) * pow(2,3) \n"
+        "   x = fun(x) \n"
         "}";
+
 const char *code2 =
         "var y = 12 + x * 3 + 3\n"
         "if (z + 23 * (23 - 4) * 4 / (1+2^4)) {}";

@@ -29,9 +29,6 @@ bool is_ambigious_operator(Token* token, char c) {
         case '=':
             token->kind = op_assign;
             return true;
-        case '-':
-            token->kind = op_sub;
-            return true;
         default:
             return false;
     }
@@ -72,6 +69,9 @@ bool is_uni_operator(Token* token, char op) {
             return true;
         case ',':
             token->kind = k_comma;
+            return true;
+        case '-':
+            token->kind = op_sub;
             return true;
         default:
             return false;
@@ -155,17 +155,6 @@ static bool is_digit(char c) { return isdigit(c); }
 static bool is_alnum(char c) { return isalnum(c); }
 
 static
-void panic(const char *tok, const char *loc) {
-    printf("Parsing Error: can't find the %s in %s!\n", tok, loc);
-}
-
-static
-void panic3(const char *target_tok, const char *tok, const char *loc) {
-    printf("Parsing Error: can't find the %s (instead %s is found) in %s!\n",
-           target_tok, tok, loc);
-}
-
-static
 bool allocate_check(void *ptr, const char *c) {
     if (ptr == nullptr) {
         printf("Fail to allocate memory to %s!\n", c);
@@ -187,8 +176,8 @@ static bool is_op(Kind k) {
                      op_le, op_ge, op_gt, op_mod, op_pow);
 }
 
-static std::nullptr_t LogError(const char *Str) {
-    fprintf(stderr, "LogError: %s\n", Str);
+static std::nullptr_t LogError(std::string str) {
+    fprintf(stderr, "LogError: %s\n", str.c_str());
     return nullptr;
 }
 #endif //COMPILER_HELP_H
