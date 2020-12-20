@@ -77,29 +77,32 @@ void codegen(std::unique_ptr<Parser> &parser, Runtime *rt) {
 
     int line = 1;
     for (auto &&expr : v) {
-        printf("=========line %d=========\n", line++);
-        std::cout << expr->eval(rt) << "\n";
+        RT_Value res = expr->eval(rt);
+        if (!(res.is_type<VOID>())) {
+            printf("=========line %d=========\n", line++);
+            std::cout << res << "\n";
+        }
     }
 }
 
 void main_loop_codegen(std::unique_ptr<Parser> &parser) {
     std::string code;
-    Runtime *rt = new Runtime;
+    auto rt = Runtime::make_runtime();
 
     do {
         std::cout << ">> ";
         std::getline(std::cin >> std::ws, code);
         if (code == "QUIT") break;
         parser->read_RT(code.c_str());
-        codegen(parser, rt);
+        codegen(parser, rt.get());
     } while (1);
 }
 
 int main() {
     int flag;
-    std::cout << "Enter 1     => lexer\n"
-                 "Enter 2     => parser\n"
-                 "Enter other => interpreter\n>> ";
+    std::cout << "Enter 1 => lexer\n"
+                 "Enter 2 => parser\n"
+                 "Enter 3 => interpreter\n>> ";
     std::cin >> flag;
     if (flag == 1) {
         std::unique_ptr<Lexer> lexer = Lexer::make_lexer("");
@@ -107,7 +110,7 @@ int main() {
     } else if (flag == 2) {
         std::unique_ptr<Parser> parser = Parser::make_parser("");
         main_loop(parser);
-    } else {
+    } else if (flag == 3) {
         std::unique_ptr<Parser> parser = Parser::make_parser("");
         main_loop_codegen(parser);
     }

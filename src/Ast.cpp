@@ -415,10 +415,16 @@ RT_Value Function_AST::eval(Runtime *rt) {
 
 RT_Value Function_call_AST::eval(Runtime *rt) {
     RT_Function *func = rt->get_function(raw_to_string(name));
+    if (!func) {
+        panic("Runtime Error : function %s has not been define!\n",
+              raw_to_string(name).c_str());
+        return RT_Value();
+    }
 
     if (func->params_name.size() != args.size()) {
         panic("Runtime Error : wrong argument number! func %s required %d, but provided %d\n",
               raw_to_string(name).c_str(), func->params_name.size(), args.size());
+        return RT_Value();
     }
 
     std::vector<RT_Value> v_args;

@@ -15,6 +15,7 @@ A simple compiler project.
         - codegen (partial)
 
 - To do
+  - Error handling
   - MLIR IR emitter
   - Code Gen
     - control flow
