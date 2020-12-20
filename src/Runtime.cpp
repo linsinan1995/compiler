@@ -43,7 +43,7 @@ bool Context::has_variable(const std::string& id_name) {
     return vars.find(id_name) != vars.end();
 }
 
-void Context::creat_function(std::string name, RT_Function* f) {
+void Context::creat_function(std::string name, const std::shared_ptr<RT_Function> &f) {
     funcs.emplace(std::move(name), f);
 }
 
@@ -51,7 +51,7 @@ bool Context::has_function(const std::string& name) {
     return funcs.find(name) != funcs.end();
 }
 
-RT_Function* Context::get_function(const std::string& name) {
+std::shared_ptr<RT_Function> Context::get_function(const std::string& name) {
     if (auto res = funcs.find(name); res != funcs.end()) {
         return res->second;
     }
@@ -254,7 +254,7 @@ bool RT_Value::to_bool() {
     return false;
 }
 
-void Runtime::creat_function(std::string name, RT_Function *f) {
+void Runtime::creat_function(std::string name, const std::shared_ptr<RT_Function> &f) {
     contexts.back()->creat_function(std::move(name), f);
 }
 
@@ -262,7 +262,7 @@ Runtime::buildin_func_t Runtime::get_builtin_function(const std::string& name) {
     return builtin_func[name];
 }
 
-RT_Function *Runtime::get_function(const std::string &name) {
+std::shared_ptr<RT_Function> Runtime::get_function(const std::string &name) {
     if (contexts.empty()) {
         return nullptr;
     }
@@ -271,7 +271,7 @@ RT_Function *Runtime::get_function(const std::string &name) {
 }
 
 void Runtime::creat_variable(const std::string& name, RT_Value rt) {
-    contexts[contexts.size()-1]->creat_variable(std::move(name), rt);
+    contexts[contexts.size()-1]->creat_variable(name, rt);
 }
 
 RT_Value Runtime::get_variable(const std::string &name) {
@@ -279,7 +279,7 @@ RT_Value Runtime::get_variable(const std::string &name) {
 }
 
 void Runtime::creat_context() {
-    contexts.push_back(new Context);
+    contexts.emplace_back(std::make_unique<Context> ());
 }
 
 void Runtime::ruin_context() {
@@ -290,9 +290,13 @@ void Runtime::creat_variables(std::vector<std::string> id_names, std::vector<RT_
     contexts[contexts.size()-1]->creat_variables(std::move(id_names), std::move(vals));
 }
 
-std::unique_ptr<Runtime> Runtime::make_runtime() {
-    auto rt = std::make_unique<Runtime>();
+std::shared_ptr<Runtime> Runtime::make_runtime() {
+    auto rt = std::make_shared<Runtime>();
     rt->creat_context();
     return rt;
+}
+
+void Runtime::register_builtin_func(const std::string& name, buildin_func_t func_ptr) {
+    builtin_func[name] = func_ptr;
 }
 

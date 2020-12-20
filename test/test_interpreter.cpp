@@ -2,7 +2,9 @@
 // Created by Lin Sinan on 2020-12-20.
 //
 #include <iostream>
+#include <string>
 #include <iomanip>
+#include "Runtime.h"
 #include "Parser.h"
 using namespace parser_ns;
 using namespace runtime_ns;
@@ -60,6 +62,10 @@ const char *code5 =
         "x(1,2)\n"
         "x(x(1,2),3)";
 
+const char *code6 =
+        "helloworld()\n"
+        "println(123,42,52)";
+
 std::ostream& operator<<(std::ostream &os, RT_Value val) {
     switch (val.type) {
         default:
@@ -76,17 +82,63 @@ std::ostream& operator<<(std::ostream &os, RT_Value val) {
     }
 }
 
+struct builtin_register {
+    std::vector<std::pair<std::string, Runtime::buildin_func_t>> funcs;
+
+    void _register(Runtime *rt) const {
+        for (auto & [name, func] : funcs)
+            rt->register_builtin_func(name, func);
+    }
+};
+
 void driver(std::unique_ptr<Parser> &parser) {
     auto rt = Runtime::make_runtime();
 
+    // rt->register_builtin_func();
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     for (auto &&expr : v) {
-        auto res = expr->eval(rt.get());
+        auto res = expr->eval(rt);
         if (!(res.is_type<VOID>()))
-            std::cout << expr->eval(rt.get()) << "\n";
+            std::cout << expr->eval(rt) << "\n";
     }
+}
+
+void driver(std::unique_ptr<Parser> &parser, const builtin_register &reg) {
+    auto rt = Runtime::make_runtime();
+    reg._register(rt.get());
+
+    // rt->register_builtin_func();
+    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+    if (v.empty()) return ;
+
+    for (auto &&expr : v) {
+        auto res = expr->eval(rt);
+        if (!(res.is_type<VOID>()))
+            std::cout << expr->eval(rt) << "\n";
+    }
+}
+
+static std::string rt_value_to_string(RT_Value val) {
+    if (val.is_type<VOID>()) return "null";
+    if (val.is_type<INT>()) return std::to_string(val.data._int);
+    if (val.is_type<BOOL>()) return std::to_string(val.data._bool);
+    if (val.is_type<FP>()) return std::to_string(val.data.fp);
+    return {};
+}
+
+RT_Value builtin_helloworld(Runtime* rt, std::vector<RT_Value> args) {
+    std::cout << "Hello world!\n";
+    return RT_Value();
+}
+
+RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
+    for (auto arg : args) {
+        std::cout << rt_value_to_string(arg) << "\n";
+    }
+    if (args.empty()) std::cout << "\n";
+    return RT_Value();
 }
 
 int main() {
@@ -110,4 +162,11 @@ int main() {
     TEST_NAME("Read me")
     parser = Parser::make_parser(code5);
     driver(parser);
+
+    TEST_NAME("Register a built-in function");
+    builtin_register reg;
+    reg.funcs.emplace_back(std::make_pair("helloworld", builtin_helloworld));
+    reg.funcs.emplace_back(std::make_pair("println", builtin_println));
+    parser = Parser::make_parser(code6);
+    driver(parser, reg);
 }

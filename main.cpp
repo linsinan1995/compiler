@@ -71,7 +71,7 @@ std::ostream& operator<<(std::ostream &os, RT_Value val) {
     }
 }
 
-void codegen(std::unique_ptr<Parser> &parser, Runtime *rt) {
+void codegen(std::unique_ptr<Parser> &parser, const std::shared_ptr<Runtime> &rt) {
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
@@ -94,7 +94,7 @@ void main_loop_codegen(std::unique_ptr<Parser> &parser) {
         std::getline(std::cin >> std::ws, code);
         if (code == "QUIT") break;
         parser->read_RT(code.c_str());
-        codegen(parser, rt.get());
+        codegen(parser, rt);
     } while (1);
 }
 

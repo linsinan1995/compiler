@@ -34,6 +34,7 @@ add_subdirectory(src)
 add_executable(test_lexer test/test_lexer.cpp src/Lexer.cpp)
 add_executable(test_parser test/test_parser.cpp)
 add_executable(test_interpreter test/test_interpreter.cpp)
+add_executable(demo_register_func_interpreter demo/register_builtin_func.cpp)
 add_executable(main main.cpp)
 
 target_link_libraries(
@@ -53,5 +54,10 @@ target_link_libraries(
 
 target_link_libraries(
     main
+    libcompiler
+)
+
+target_link_libraries(
+    demo_register_func_interpreter
     libcompiler
 )

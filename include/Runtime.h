@@ -59,33 +59,35 @@ namespace runtime_ns {
         void         creat_variables(std::vector<std::string>, std::vector<RT_Value>);
 
         bool         has_function(const std::string& name);
-        RT_Function* get_function(const std::string& name);
-        void         creat_function(std::string name, RT_Function* f);
+        void         creat_function(std::string name, const std::shared_ptr<RT_Function> &f);
+        std::shared_ptr<RT_Function> get_function(const std::string& name);
+
     public:
         // store variables & functions
         std::unordered_map<std::string, RT_Value>     vars;
-        std::unordered_map<std::string, RT_Function*> funcs;
+        std::unordered_map<std::string, std::shared_ptr<RT_Function> > funcs;
     };
 
     class Runtime {
     public:
-        using buildin_func_t = RT_Value (*)(Runtime*, RT_Function*);
+        using buildin_func_t = RT_Value (*)(Runtime*, std::vector<RT_Value>);
 
         RT_Value       get_variable(const std::string&);
         void           creat_variable(const std::string&, RT_Value);
         void           creat_variables(std::vector<std::string>, std::vector<RT_Value>);
 
-        RT_Function*   get_function(const std::string& name);
-        void           creat_function(std::string name, RT_Function* f);
+        std::shared_ptr<RT_Function>  get_function(const std::string& name);
+        void           creat_function(std::string name, const std::shared_ptr<RT_Function> &f);
 
         buildin_func_t get_builtin_function(const std::string&);
 
         void creat_context();
         void ruin_context();
 
-        static std::unique_ptr<Runtime> make_runtime();
+        static std::shared_ptr<Runtime> make_runtime();
+        void register_builtin_func(const std::string& name, buildin_func_t func_ptr);
     public:
-        std::vector<Context*> contexts;
+        std::vector<std::unique_ptr<Context>> contexts;
         std::unordered_map<std::string, buildin_func_t> builtin_func;
     };
 }

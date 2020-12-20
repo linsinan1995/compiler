@@ -18,6 +18,7 @@
 #include "Ast.h"
 
 using namespace llvm;
+using namespace runtime_ns;
 
 static std::unique_ptr<llvm::LLVMContext> context = std::make_unique<llvm::LLVMContext>();
 static std::unique_ptr<llvm::Module> module = std::make_unique<llvm::Module>("jit", *context);
@@ -333,31 +334,31 @@ void While_AST::print() {
 
 using namespace runtime_ns;
 
-RT_Value Float_point_AST::eval(Runtime *rt) {
+RT_Value Float_point_AST::eval(const std::shared_ptr<Runtime> &rt) {
     return RT_Value(FP, val);
 }
 
-RT_Value Variable_AST::eval(Runtime *rt) {
+RT_Value Variable_AST::eval(const std::shared_ptr<Runtime> &rt) {
     return rt->get_variable(raw_to_string(name));
 }
 
-RT_Value Assign_AST::eval(Runtime *rt) {
+RT_Value Assign_AST::eval(const std::shared_ptr<Runtime> &rt) {
     auto res = rhs->eval(rt);
     rt->creat_variable(raw_to_string(var->name), res);
     return RT_Value();
 }
 
-RT_Value Define_AST::eval(Runtime *rt) {
+RT_Value Define_AST::eval(const std::shared_ptr<Runtime> &rt) {
     auto res = rhs->eval(rt);
     rt->creat_variable(raw_to_string(var->name), res);
     return RT_Value();
 }
 
-RT_Value Unary_expr_AST::eval(Runtime *rt) {
+RT_Value Unary_expr_AST::eval(const std::shared_ptr<Runtime> &rt) {
     return LHS->eval(rt);
 }
 
-RT_Value Binary_expr_AST::eval(Runtime *rt) {
+RT_Value Binary_expr_AST::eval(const std::shared_ptr<Runtime> &rt) {
     RT_Value l_val = LHS->eval(rt);
     RT_Value r_val = RHS->eval(rt);
 
@@ -391,7 +392,7 @@ RT_Value Binary_expr_AST::eval(Runtime *rt) {
 }
 
 
-RT_Value Block_AST::eval(Runtime *rt) {
+RT_Value Block_AST::eval(const std::shared_ptr<Runtime> &rt) {
     for (auto &expr : v_expr) {
         expr->eval(rt);
     }
@@ -399,8 +400,8 @@ RT_Value Block_AST::eval(Runtime *rt) {
     return RT_Value();
 }
 
-RT_Value Function_AST::eval(Runtime *rt) {
-    auto *func = new RT_Function;
+RT_Value Function_AST::eval(const std::shared_ptr<Runtime> &rt) {
+    auto func = std::make_shared<RT_Function>() ;
 
     for (auto & arg : args_with_func_name->args) {
         func->params_name.push_back(raw_to_string(arg->name));
@@ -413,24 +414,31 @@ RT_Value Function_AST::eval(Runtime *rt) {
     return RT_Value();
 }
 
-RT_Value Function_call_AST::eval(Runtime *rt) {
-    RT_Function *func = rt->get_function(raw_to_string(name));
+RT_Value Function_call_AST::eval(const std::shared_ptr<Runtime> &rt) {
+    std::shared_ptr<RT_Function> func = rt->get_function(raw_to_string(name));
+
+    std::vector<RT_Value> v_args;
+
+    for (auto &arg : args) {
+        v_args.emplace_back(arg->eval(rt));
+    }
+
     if (!func) {
-        panic("Runtime Error : function %s has not been define!\n",
-              raw_to_string(name).c_str());
-        return RT_Value();
+        auto f = rt->get_builtin_function(raw_to_string(name));
+
+        if (!f) {
+            panic("Runtime Error : function %s has not been define!\n",
+                  raw_to_string(name).c_str());
+            return RT_Value();
+        }
+
+        return f(rt.get(), std::move(v_args));
     }
 
     if (func->params_name.size() != args.size()) {
         panic("Runtime Error : wrong argument number! func %s required %d, but provided %d\n",
               raw_to_string(name).c_str(), func->params_name.size(), args.size());
         return RT_Value();
-    }
-
-    std::vector<RT_Value> v_args;
-
-    for (auto &arg : args) {
-        v_args.emplace_back(arg->eval(rt));
     }
 
     rt->creat_context();
@@ -442,7 +450,7 @@ RT_Value Function_call_AST::eval(Runtime *rt) {
     return res;
 }
 
-RT_Value If_AST::eval(Runtime* rt) {
+RT_Value If_AST::eval(const std::shared_ptr<Runtime> &rt) {
     RT_Value cond_res = cond->eval(rt);
     if (cond_res.to_bool() && if_block){
         if_block->eval(rt);
@@ -453,7 +461,7 @@ RT_Value If_AST::eval(Runtime* rt) {
     return RT_Value();
 }
 
-RT_Value While_AST::eval(Runtime* rt) {
+RT_Value While_AST::eval(const std::shared_ptr<Runtime> &rt) {
     while (cond->eval(rt).to_bool()){
         while_block->eval(rt);
     }

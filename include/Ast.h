@@ -59,7 +59,7 @@ using ptr_Unary_expr_AST     = std::unique_ptr<Unary_expr_AST>;
 struct Expression_AST {
     virtual ~Expression_AST() = default;
 
-    virtual runtime_ns::RT_Value eval(runtime_ns::Runtime*) = 0;
+    virtual runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &) = 0;
     virtual llvm::Value *codegen() = 0;
     virtual void print() = 0;
 };
@@ -80,7 +80,7 @@ public:
     float val;
     explicit Float_point_AST(float m_val) : val(m_val) {}
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override;
     void print() override;
     llvm::Value* codegen() override;
 };
@@ -89,7 +89,7 @@ struct Variable_AST : public Expression_AST {
     raw_string name;
     explicit Variable_AST(raw_string m_name) : name(m_name) {}
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override;
     void print() override;
     llvm::Value* codegen() override;
 };
@@ -97,7 +97,7 @@ struct Variable_AST : public Expression_AST {
 struct Block_AST : public Expression_AST {
     std::vector<ptr_Expression_AST> v_expr;
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override;
     void print() override;
     llvm::Value* codegen() override;
 };
@@ -106,7 +106,7 @@ struct Function_proto_AST : public Expression_AST {
     raw_string                    name;
     std::vector<ptr_Variable_AST> args;
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override { return runtime_ns::RT_Value(); }
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override { return runtime_ns::RT_Value(); }
     void print() override;
     llvm::Function * codegen() override;
 };
@@ -116,7 +116,7 @@ struct Function_AST : public Expression_AST {
     ptr_Expression_AST      return_expr;
     ptr_Function_proto_AST  args_with_func_name;
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override;
     void print() override;
     llvm::Value* codegen() override;
 };
@@ -125,7 +125,7 @@ struct Function_call_AST : public Expression_AST {
     raw_string name;
     std::vector<ptr_Expression_AST> args;
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override;
     void print() override;
     llvm::Value* codegen() override;
 };
@@ -138,7 +138,7 @@ struct Unary_expr_AST : public Expression_AST {
     explicit Unary_expr_AST(ptr_Expression_AST lhs) :
             LHS(std::move(lhs))
     {}
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override;
     void print() override ;
     llvm::Value* codegen() override;
 };
@@ -147,7 +147,7 @@ struct Binary_expr_AST : public Unary_expr_AST {
     ptr_Expression_AST RHS;
     Kind op;
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime *rt) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &rt) override;
     void print() override;
     llvm::Value* codegen() override;
 };
@@ -158,13 +158,13 @@ struct Assign_AST : public Expression_AST {
 
     void print() override;
     llvm::Value *codegen() override;
-    runtime_ns::RT_Value eval(runtime_ns::Runtime*) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &) override;
 };
 
 struct Define_AST : public Assign_AST {
     llvm::Value* codegen() override;
     void print() override;
-    runtime_ns::RT_Value eval(runtime_ns::Runtime*) override;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &) override;
 
 };
 
@@ -175,15 +175,14 @@ struct If_AST : public Expression_AST {
 
     llvm::Value* codegen() override;
     void print() override;
-    runtime_ns::RT_Value eval(runtime_ns::Runtime*) override;
-
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &) override;
 };
 
 struct While_AST: public Expression_AST  {
     ptr_Expression_AST cond;
     ptr_Block_AST      while_block;
 
-    runtime_ns::RT_Value eval(runtime_ns::Runtime*) override ;
+    runtime_ns::RT_Value eval(const std::shared_ptr<runtime_ns::Runtime> &) override ;
     llvm::Value* codegen() override;
     void print() override;
 };

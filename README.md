@@ -173,6 +173,70 @@ x(x(1,2),3);
 ==============================================
 ```
 
+# Register built-in function from C++
+A demo
+
+```c++
+#include "Runtime.h"
+#include "Parser.h"
+using namespace parser_ns;
+using namespace runtime_ns;
+
+struct builtin_register {
+    std::vector<std::pair<std::string, Runtime::buildin_func_t>> funcs;
+
+    void _register(Runtime *rt) const {
+        for (auto & [name, func] : funcs)
+            rt->register_builtin_func(name, func);
+    }
+};
+
+// functions will be registered
+RT_Value builtin_helloworld(Runtime* rt, std::vector<RT_Value> args) {
+    std::cout << "Hello world!\n";
+    return RT_Value();
+}
+
+RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
+    for (auto arg : args) {
+        std::cout << rt_value_to_string(arg) << "\n";
+    }
+    if (args.empty()) std::cout << "\n";
+    return RT_Value();
+}
+
+const char *code =
+        "helloworld()\n"
+        "println(123,42,52)";
+
+int main () {
+    builtin_register reg;
+    auto rt = Runtime::make_runtime();
+
+    reg.funcs.emplace_back(std::make_pair("helloworld", builtin_helloworld));
+    reg.funcs.emplace_back(std::make_pair("println", builtin_println));
+    // dump buildin functions into the global scope of runtime.
+    reg._register(rt.get());
+
+    auto parser = Parser::make_parser(code);
+    driver(parser);
+
+    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+    for (auto &&expr : v) {
+        auto res = expr->eval(rt);
+        if (!(res.is_type<VOID>()))
+            std::cout << expr->eval(rt) << "\n";
+    }
+}
+```
+
+result
+```
+Hello world!
+123.000000
+42.000000
+52.000000
+```
 
 # Problems on execution condition statement
 
