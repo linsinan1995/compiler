@@ -18,6 +18,7 @@
     X(op_le),\
     X(op_assign),\
     X(k_var),\
+    X(k_fp),\
     X(k_int),\
     X(k_EOF),\
     X(k_comma),\

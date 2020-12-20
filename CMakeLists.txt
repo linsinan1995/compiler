@@ -33,6 +33,7 @@ add_subdirectory(src)
 
 add_executable(test_lexer test/test_lexer.cpp src/Lexer.cpp)
 add_executable(test_parser test/test_parser.cpp)
+add_executable(test_interpreter test/test_interpreter.cpp)
 add_executable(main main.cpp)
 
 target_link_libraries(
@@ -43,6 +44,11 @@ target_link_libraries(
 target_link_libraries(
     test_lexer
     liblexer
+)
+
+target_link_libraries(
+    test_interpreter
+    libcompiler
 )
 
 target_link_libraries(

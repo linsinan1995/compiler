@@ -65,7 +65,7 @@ void Lexer::comment(Token* token) {
     // eat # + ' '
     char ne = eat();
 
-    while (ne != '\n') {
+    while (!anyone(ne, '\n', '\0')) {
         ne = eat();
         token->lexeme.len++;
     }
@@ -79,8 +79,7 @@ void Lexer::identifier(Token* token) {
 
     char ne = eat();
     while (is_valid_identifier(ne)) {
-        eat();
-        ne = peek();
+        ne = eat();
         token->lexeme.len++;
     }
 
@@ -88,16 +87,24 @@ void Lexer::identifier(Token* token) {
 }
 
 void Lexer::number(Token* token) {
-    token->kind = k_int;
-
     token->lexeme.content = src_code;
     token->lexeme.len = 1;
+    bool is_fp = false;
 
     char ne = eat();
-    while (is_digit(ne)) {
+
+    while (is_digit(ne) || (!is_fp && ne == '.')) {
+        if (ne == '.') {
+            is_fp = true;
+            ne = eat();
+            token->lexeme.len++;
+        }
         ne = eat();
         token->lexeme.len++;
     }
+
+//    token->kind = is_fp ? k_fp : k_int;
+    token->kind = k_fp;
 }
 
 inline

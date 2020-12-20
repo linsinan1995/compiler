@@ -34,9 +34,25 @@ const char *code3 =
         "func x(x$ z) {\n";
 
 const char *code4 =
-        "var x = 3";
+        "var x = 5\n"
+        "var y = 12 + x * 3 + 3\n"
+        "func f(a,b) {\n"
+        "   x = b - 1\n"
+        "   return a*b+x\n"
+        "}\n"
+        "f(1, y)\n"
+        "f(1, x)\n"
+        "x = f(f(x,1),f(2, f(1,y)))\n"
+        "f(1,x)\n"
+        "f(1,2)\n";
 
-const char *code5 = "var a = -12 +\n";
+const char *code5 =
+        "func x(a, b) {\n"
+        "    return a * b\n"
+        "}\n"
+        "\n"
+        "x(1,2)\n"
+        "x(x(1,2),3)";
 
 void main_loop(std::unique_ptr<Lexer>& lex) {
     std::unique_ptr<Token> token = nullptr;
@@ -72,7 +88,7 @@ int main() {
     lex->load(code4);
     main_loop(lex);
 
-    TEST_NAME("def binary exp err")
+    TEST_NAME("readme")
     lex->load(code5);
     main_loop(lex);
 
