@@ -33,6 +33,7 @@ add_library(
 
 add_library(
     libcompiler
+    Runtime.cpp
     Ast.cpp
     Parser.cpp
 )

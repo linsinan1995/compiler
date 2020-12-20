@@ -24,7 +24,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 
-#include "helper.h"
+#include "Runtime.h"
 
 struct Expression_AST;
 struct Float_point_AST;
@@ -55,110 +55,6 @@ using ptr_Assign_AST         = std::unique_ptr<Assign_AST>;
 using ptr_If_AST             = std::unique_ptr<If_AST>;
 using ptr_While_AST          = std::unique_ptr<While_AST>;
 using ptr_Unary_expr_AST     = std::unique_ptr<Unary_expr_AST>;
-
-
-
-namespace runtime_ns {
-    enum Value_Type { FP, INT, BOOL, VOID };
-
-    class RT_Value {
-    public:
-        explicit RT_Value() : type(VOID) {};
-        explicit RT_Value(Value_Type type, float val)
-                : type(type) { data.fp = val;}
-        explicit RT_Value(Value_Type type, bool val)
-                : type(type) { data._bool = val;}
-        explicit RT_Value(Value_Type type, int val)
-                : type(type) { data._int = val;}
-
-        template <int _Value_Type> bool is_type();
-
-        // reflect
-        Value_Type type {};
-        union {
-            int _int;
-            float fp;
-            bool _bool;
-        } data {};
-
-        RT_Value operator+(RT_Value rhs);
-        RT_Value operator-(RT_Value rhs);
-        RT_Value operator*(RT_Value rhs);
-        RT_Value operator/(RT_Value rhs);
-        RT_Value operator%(RT_Value rhs);
-
-        RT_Value operator>(RT_Value rhs);
-        RT_Value operator<(RT_Value rhs);
-        RT_Value operator==(RT_Value rhs);
-        RT_Value operator>=(RT_Value rhs);
-        RT_Value operator<=(RT_Value rhs);
-        RT_Value operator^(RT_Value rhs);
-
-        bool to_bool();
-    };
-
-    struct RT_Function {
-        std::vector<std::string> params_name;
-        std::vector<RT_Value> params;
-        ptr_Block_AST block;
-        ptr_Expression_AST ret;
-    };
-
-
-    class Context {
-    public:
-        explicit Context() = default;
-        virtual ~Context() {};
-
-        bool has_variable(const std::string&);
-        void creat_variable(const std::string&, RT_Value);
-        RT_Value get_variable(const std::string&);
-
-        void creat_function(std::string name, RT_Function* f);
-        bool has_function(const std::string& name);
-        RT_Function* get_function(const std::string& name);
-        void creat_variables(std::vector<std::string>, std::vector<RT_Value>);
-
-    public:
-        // 储存已声明的变量
-        std::unordered_map<std::string, RT_Value> vars;
-        // 储存已声明的函数
-        std::unordered_map<std::string, RT_Function*> funcs;
-    };
-
-    struct context_tree {
-        std::vector<context_tree*> children;
-        Context *head;
-    };
-
-    class Runtime {
-        using Type_build_in_func = RT_Value (*)(Runtime*, RT_Function*);
-    public:
-        static std::unique_ptr<Runtime> make_runtime() {
-            auto rt = std::make_unique<Runtime>();
-            rt->creat_context();
-            return rt;
-        }
-
-        Type_build_in_func get_builtin_function(const std::string& name) {
-            return builtin[name];
-        }
-        void creat_variables(std::vector<std::string>, std::vector<RT_Value>);
-
-        void creat_variable(const std::string&, RT_Value);
-        RT_Value get_variable(const std::string&);
-
-        void creat_function(std::string name, RT_Function* f);
-        RT_Function* get_function(const std::string& name);
-        void creat_context();
-        void ruin_context();
-
-    public:
-        std::vector<Context*> contexts;
-        std::unordered_map<std::string, Type_build_in_func> builtin;
-    };
-
-}
 
 struct Expression_AST {
     virtual ~Expression_AST() = default;

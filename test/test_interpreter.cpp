@@ -9,8 +9,6 @@ using namespace runtime_ns;
 static int TEST_COUNT = 1;
 #define TEST_NAME(X) printf("==============TEST %d: %-10s==============\n", TEST_COUNT++, X);
 
-void print_expression(Expression_AST *exp);
-
 const char *code =
         "var x = 23\n"
         "x = x / 4\n"
