@@ -276,8 +276,11 @@ ptr_expr Parser::parse_unary_expr() {
         default:
             return LogError("unknown token when expecting an expression");
         case op_sub:
-        case k_fp:
+            return parse_neg_number_expr();
+        case k_int:
             return parse_int_expr();
+        case k_fp:
+            return parse_fp_expr();
         case k_open_paren:
             return parse_paren_expr();
         case k_var:
@@ -346,24 +349,22 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
         // eat op
         next();
-        auto bi_expr = std::make_unique<Binary_expr_AST> ();
-        bi_expr->LHS = std::move(expr);
-        bi_expr->op = op;
-        bi_expr->RHS = parse_expr(cur_prec+1);
+        auto bi_expr = std::make_unique<Binary_expr_AST> (std::move(expr),
+                                                          op,
+                                                          parse_expr(cur_prec+1));
         expr = std::move(bi_expr); // !
     }
     return expr;
 }
 
+inline
+ptr_Float_point_AST Parser::parse_fp_expr() {
+    return std::make_unique<Float_point_AST> (get_val_tok_fp(cur_token.get()));
+}
 
 inline
 ptr_Integer_AST Parser::parse_int_expr() {
-    if (cur_token->kind == op_sub) {
-        next();
-        return std::make_unique<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
-    }
-
-    return std::make_unique<Float_point_AST> (get_val_tok_fp(cur_token.get()));
+    return std::make_unique<Integer_AST> (get_val_tok_int(cur_token.get()));
 }
 
 inline
@@ -414,4 +415,20 @@ ptr_expr Parser::read_one_statement() {
         case kw_def:
             return handle_def_statement();
     }
+}
+
+ptr_expr Parser::parse_neg_number_expr() {
+    // eat negative
+    next();
+
+    if (cur_token->kind == k_int) {
+        return std::make_unique<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
+    }
+
+    if (cur_token->kind == k_fp) {
+        return std::make_unique<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
+    }
+
+    return panic_nptr("Parsing error : Wrong token type! The parser expects int or fp, "
+                      "but get %s" , names_kind[cur_token->kind]);
 }

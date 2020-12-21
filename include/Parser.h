@@ -39,6 +39,7 @@ public:
     ptr_expr                parse_expr(int prev_prec = 0);
     ptr_expr                parse_unary_expr();
     ptr_Variable_AST        parse_id_expr();
+    ptr_Float_point_AST     parse_fp_expr();
     ptr_Integer_AST         parse_int_expr();
     ptr_expr                parse_paren_expr();
     ptr_Block_AST           parse_block();
@@ -49,8 +50,10 @@ public:
     ptr_Function_AST        parse_def_func_expr(ptr_Function_proto_AST);
 public:
     void read_RT(const char *code);
-    Parser(std::unique_ptr<Lexer>);
+    explicit Parser(std::unique_ptr<Lexer>);
     static std::unique_ptr<Parser> make_parser(const char *code);
+
+    ptr_expr parse_neg_number_expr();
 };
 
 

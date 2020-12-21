@@ -17,16 +17,16 @@
 
 #include "Ast.h"
 
-void Integer_AST::accept(AST_Visitor &visitor) { visitor.visit_int(*this); }
-void Float_point_AST::accept(AST_Visitor &visitor) { visitor.visit_fp(*this); }
-void Variable_AST::accept(AST_Visitor &visitor) { visitor.visit_var(*this); }
-void Function_proto_AST::accept(AST_Visitor &visitor) { visitor.visit_func_proto(*this);}
-void Block_AST::accept(AST_Visitor &visitor) { visitor.visit_block(*this); }
-void Unary_expr_AST::accept(AST_Visitor &visitor) { visitor.visit_unary(*this); }
-void Binary_expr_AST::accept(AST_Visitor &visitor) { visitor.visit_binary(*this); }
-void Assign_AST::accept(AST_Visitor &visitor) { visitor.visit_assign(*this); }
-void Define_AST::accept(AST_Visitor &visitor) { visitor.visit_def(*this); }
-void If_AST::accept(AST_Visitor &visitor) { visitor.visit_if(*this); }
-void While_AST::accept(AST_Visitor &visitor) { visitor.visit_while(*this); }
-void Function_call_AST::accept(AST_Visitor &visitor) { visitor.visit_func_call(*this); }
-void Function_AST::accept(AST_Visitor &visitor) { visitor.visit_func(*this); }
+inline void Integer_AST::accept(AST_Visitor &visitor) { visitor.visit_int(*this); }
+inline void Float_point_AST::accept(AST_Visitor &visitor) { visitor.visit_fp(*this); }
+inline void Variable_AST::accept(AST_Visitor &visitor) { visitor.visit_var(*this); }
+inline void Function_proto_AST::accept(AST_Visitor &visitor) { visitor.visit_func_proto(*this);}
+inline void Block_AST::accept(AST_Visitor &visitor) { visitor.visit_block(*this); }
+inline void Unary_expr_AST::accept(AST_Visitor &visitor) { visitor.visit_unary(*this); }
+inline void Binary_expr_AST::accept(AST_Visitor &visitor) { visitor.visit_binary(*this); }
+inline void Assign_AST::accept(AST_Visitor &visitor) { visitor.visit_assign(*this); }
+inline void Define_AST::accept(AST_Visitor &visitor) { visitor.visit_def(*this); }
+inline void If_AST::accept(AST_Visitor &visitor) { visitor.visit_if(*this); }
+inline void While_AST::accept(AST_Visitor &visitor) { visitor.visit_while(*this); }
+inline void Function_call_AST::accept(AST_Visitor &visitor) { visitor.visit_func_call(*this); }
+inline void Function_AST::accept(AST_Visitor &visitor) { visitor.visit_func(*this); }

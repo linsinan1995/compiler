@@ -29,7 +29,7 @@ public:
     void ambigious_operator (Token*);
 
 public:
-    Lexer(const char * code) ;
+    explicit Lexer(const char * code) ;
     static ptr_lexer make_lexer(const char *);
 };
 

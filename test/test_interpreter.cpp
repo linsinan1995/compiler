@@ -45,6 +45,7 @@ const char *code3 =
         "}\n"
         "\n"
         "max(1,3)\n"
+        "max(-231,-253)\n"
         "max(max(1,4),3)\n";
 
 const char *code4 =

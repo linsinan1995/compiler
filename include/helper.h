@@ -167,6 +167,10 @@ static float get_val_tok_fp(Token *tok) {
     return strtof(tok->lexeme.content, nullptr);
 }
 
+static int get_val_tok_int(Token *tok) {
+    return static_cast<int> (strtol(tok->lexeme.content, nullptr, 10));
+}
+
 static void* f_malloc(size_t t) {
     return malloc(t);
 }
@@ -187,5 +191,13 @@ static std::nullptr_t LogError(std::string str) {
     vfprintf(stdout, format, args);
     va_end(args);
     // exit(EXIT_FAILURE);
+}
+
+static std::nullptr_t panic_nptr(char const* const format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    return nullptr;
 }
 #endif //COMPILER_HELP_H

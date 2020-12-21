@@ -14,7 +14,8 @@
 //
 // Created by Lin Sinan on 2020-12-16.
 //
-
+// all scalar is float for convenience
+#define ALL_FLOAT_POINT
 #include "Lexer.h"
 
 inline
@@ -102,9 +103,11 @@ void Lexer::number(Token* token) {
         ne = eat();
         token->lexeme.len++;
     }
-
-//    token->kind = is_fp ? k_fp : k_int;
+#ifdef ALL_FLOAT_POINT
     token->kind = k_fp;
+#else
+    token->kind = is_fp ? k_fp : k_int;
+#endif
 }
 
 inline
