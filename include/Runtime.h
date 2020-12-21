@@ -51,6 +51,8 @@ namespace runtime_ns {
         std::unique_ptr<Expression_AST> ret;
     };
 
+
+
     class Context {
     public:
         bool         has_variable(const std::string&);
@@ -68,6 +70,8 @@ namespace runtime_ns {
         std::unordered_map<std::string, std::shared_ptr<RT_Function> > funcs;
     };
 
+    using s_ptr_func = std::shared_ptr<RT_Function>;
+
     class Runtime {
     public:
         using buildin_func_t = RT_Value (*)(Runtime*, std::vector<RT_Value>);
@@ -76,14 +80,15 @@ namespace runtime_ns {
         void           creat_variable(const std::string&, RT_Value);
         void           creat_variables(std::vector<std::string>, std::vector<RT_Value>);
 
-        std::shared_ptr<RT_Function>  get_function(const std::string& name);
-        void           creat_function(std::string name, const std::shared_ptr<RT_Function> &f);
+        s_ptr_func     get_function(const std::string& name);
+        void           creat_function(std::string name, const s_ptr_func &f);
 
         buildin_func_t get_builtin_function(const std::string&);
 
         void creat_context();
         void ruin_context();
 
+        void clear();
         static std::shared_ptr<Runtime> make_runtime();
         void register_builtin_func(const std::string& name, buildin_func_t func_ptr);
     public:

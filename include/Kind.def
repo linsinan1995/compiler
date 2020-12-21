@@ -47,3 +47,19 @@
     X(k_exp_binary), \
     X(k_exp_var)
 
+#define ENUM_AST_KIND_ENTRY \
+    X(Expression_AST_t),\
+    X(Float_point_AST_t),\
+    X(Variable_AST_t),\
+    X(Binary_expr_AST_t),\
+    X(Define_AST_t),\
+    X(Function_call_AST_t),\
+    X(If_AST_t),\
+    X(Else_AST_t),\
+    X(Block_AST_t),\
+    X(Assign_AST_t),\
+    X(Function_AST_t),\
+    X(While_AST_t),\
+    X(Function_proto_AST_t),\
+    X(Unary_expr_AST_t),\
+    X(Integer_AST_t)

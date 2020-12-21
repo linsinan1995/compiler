@@ -300,3 +300,9 @@ void Runtime::register_builtin_func(const std::string& name, buildin_func_t func
     builtin_func[name] = func_ptr;
 }
 
+void Runtime::clear() {
+    builtin_func.clear();
+    contexts.clear();
+    creat_context();
+}
+

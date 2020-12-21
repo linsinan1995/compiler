@@ -2,7 +2,8 @@
 // Created by Lin Sinan on 2020-12-21.
 //
 #include <iostream>
-#include "Runtime.h"
+
+#include "AST_visitor/AST_Interpreter.h"
 #include "Parser.h"
 
 using namespace parser_ns;
@@ -56,24 +57,27 @@ RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
 }
 
 const char *code =
+        "# helloworld & println are functions ported from C++ interface\n"
         "helloworld()\n"
         "println(123,42,52)";
 
 int main () {
     builtin_register reg;
-    auto rt = Runtime::make_runtime();
+    AST_Interpreter interpreter {};
 
     reg.funcs.emplace_back(std::make_pair("helloworld", builtin_helloworld));
     reg.funcs.emplace_back(std::make_pair("println", builtin_println));
     // dump buildin functions into the global scope of runtime.
-    reg._register(rt.get());
+    reg._register(interpreter.rt.get());
 
     auto parser = Parser::make_parser(code);
 
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+
     for (auto &&expr : v) {
-        auto res = expr->eval(rt);
-        if (!(res.is_type<VOID>()))
-            std::cout << expr->eval(rt) << "\n";
+        interpreter.evaluate(*expr);
+        if (!interpreter.is_null())
+            std::cout << interpreter.val << "\n";
     }
+    interpreter.rt->clear();
 }

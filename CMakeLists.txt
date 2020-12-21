@@ -32,15 +32,21 @@ message(STATUS "Using llvm pkgconfig in: ${llvm}")
 add_subdirectory(src)
 
 add_executable(test_lexer test/test_lexer.cpp src/Lexer.cpp)
-add_executable(test_parser test/test_parser.cpp)
-add_executable(test_interpreter test/test_interpreter.cpp)
-add_executable(demo_register_func_interpreter demo/register_builtin_func.cpp)
+#add_executable(test_parser test/test_parser.cpp)
+add_executable(test_interpreter src/AST_visitor/AST_Interpreter.cpp test/test_interpreter.cpp)
+add_executable(demo_register_func_interpreter src/AST_visitor/AST_Interpreter.cpp demo/register_builtin_func.cpp)
 add_executable(main main.cpp)
+add_executable(test_visitor src/AST_visitor/AST_Printer.cpp test/test_visitor.cpp)
 
 target_link_libraries(
-    test_parser
+    test_visitor
     libcompiler
 )
+
+#target_link_libraries(
+#    test_parser
+#    libcompiler
+#)
 
 target_link_libraries(
     test_lexer

@@ -4,8 +4,11 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+
+#include "AST_visitor/AST_Interpreter.h"
 #include "Runtime.h"
 #include "Parser.h"
+
 using namespace parser_ns;
 using namespace runtime_ns;
 static int TEST_COUNT = 1;
@@ -91,33 +94,16 @@ struct builtin_register {
     }
 };
 
-void driver(std::unique_ptr<Parser> &parser) {
-    auto rt = Runtime::make_runtime();
-
-    // rt->register_builtin_func();
+void driver(std::unique_ptr<Parser> &parser, AST_Interpreter& visitor) {
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     for (auto &&expr : v) {
-        auto res = expr->eval(rt);
-        if (!(res.is_type<VOID>()))
-            std::cout << expr->eval(rt) << "\n";
+        visitor.evaluate(*expr);
+        if (!visitor.is_null())
+            std::cout << visitor.val << "\n";
     }
-}
-
-void driver(std::unique_ptr<Parser> &parser, const builtin_register &reg) {
-    auto rt = Runtime::make_runtime();
-    reg._register(rt.get());
-
-    // rt->register_builtin_func();
-    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
-    if (v.empty()) return ;
-
-    for (auto &&expr : v) {
-        auto res = expr->eval(rt);
-        if (!(res.is_type<VOID>()))
-            std::cout << expr->eval(rt) << "\n";
-    }
+    visitor.rt->clear();
 }
 
 static std::string rt_value_to_string(RT_Value val) {
@@ -143,30 +129,33 @@ RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
 
 int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
+    AST_Interpreter interpreter {};
 
     TEST_NAME("simple def")
-    driver(parser);
+    driver(parser, interpreter);
 
     TEST_NAME("func def & call")
     parser = Parser::make_parser(code2);
-    driver(parser);
+    driver(parser, interpreter);
 
     TEST_NAME("if block")
     parser = Parser::make_parser(code3);
-    driver(parser);
+    driver(parser, interpreter);
 
     TEST_NAME("while block")
     parser = Parser::make_parser(code4);
-    driver(parser);
+    driver(parser, interpreter);
 
     TEST_NAME("Read me")
     parser = Parser::make_parser(code5);
-    driver(parser);
+    driver(parser, interpreter);
 
     TEST_NAME("Register a built-in function");
     builtin_register reg;
     reg.funcs.emplace_back(std::make_pair("helloworld", builtin_helloworld));
     reg.funcs.emplace_back(std::make_pair("println", builtin_println));
+
+    reg._register(interpreter.rt.get());
     parser = Parser::make_parser(code6);
-    driver(parser, reg);
+    driver(parser, interpreter);
 }
