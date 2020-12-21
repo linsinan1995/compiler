@@ -1,4 +1,4 @@
-f()
+f(1,2)
 func f(a, b) { return a + b }
 f(1,2)
 if (1+2 >= 3) { z = 3 } else { z = 2 } z

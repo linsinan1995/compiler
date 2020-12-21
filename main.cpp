@@ -3,19 +3,22 @@
 //
 #include <iomanip>
 #include <iostream>
+#include "AST_visitor/AST_Printer.h"
+#include "AST_visitor/AST_Interpreter.h"
 #include "Parser.h"
 
 using namespace parser_ns;
 using namespace runtime_ns;
 
 void driver(std::unique_ptr<Parser> &parser) {
+    AST_Printer printer {};
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
     for (auto &&expr : v) {
         printf("=========line %d=========\n", line++);
-        expr->print();
+        printer.evaluate(*expr);
     }
 }
 
@@ -24,7 +27,7 @@ void main_loop(std::unique_ptr<Parser> &parser) {
     do {
         std::cout << ">> ";
         std::getline(std::cin >> std::ws, code);
-        if (code == "QUIT") break;
+        if (code == "QUIT") return ;
         parser->read_RT(code.c_str());
         driver(parser);
     } while (1);
@@ -49,6 +52,7 @@ void main_loop(std::unique_ptr<Lexer> &lexer) {
     do {
         std::cout << ">> ";
         if (!std::getline(std::cin >> std::ws, code)) break;
+        if (code == "QUIT") return ;
         lexer->load(code.c_str());
         do_lexing(lexer);
     } while (1);
@@ -71,48 +75,51 @@ std::ostream& operator<<(std::ostream &os, RT_Value val) {
     }
 }
 
-void codegen(std::unique_ptr<Parser> &parser, const std::shared_ptr<Runtime> &rt) {
+void interpreting(std::unique_ptr<Parser> &parser, std::shared_ptr<AST_Interpreter> &interpreter) {
+    // local interpreter will be destroyed -> use pointer
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
     for (auto &&expr : v) {
-        RT_Value res = expr->eval(rt);
-        if (!(res.is_type<VOID>())) {
+        interpreter->evaluate(*expr);
+        if (!interpreter->is_null()) {
             printf("=========line %d=========\n", line++);
-            std::cout << res << "\n";
+            std::cout << interpreter->val << "\n";
         }
     }
 }
 
-void main_loop_codegen(std::unique_ptr<Parser> &parser) {
+void main_loop_interpreter(std::unique_ptr<Parser> &parser) {
     std::string code;
-    auto rt = Runtime::make_runtime();
+    auto interpreter = std::make_shared<AST_Interpreter> ();
 
     do {
         std::cout << ">> ";
         std::getline(std::cin >> std::ws, code);
-        if (code == "QUIT") break;
+        if (code == "QUIT") return ;
         parser->read_RT(code.c_str());
-        codegen(parser, rt);
+        interpreting(parser, interpreter);
     } while (1);
 }
 
 int main() {
-    int flag;
-    std::cout << "Enter 1 => lexer\n"
-                 "Enter 2 => parser\n"
-                 "Enter 3 => interpreter\n>> ";
-    std::cin >> flag;
-    if (flag == 1) {
-        std::unique_ptr<Lexer> lexer = Lexer::make_lexer("");
-        main_loop(lexer);
-    } else if (flag == 2) {
-        std::unique_ptr<Parser> parser = Parser::make_parser("");
-        main_loop(parser);
-    } else if (flag == 3) {
-        std::unique_ptr<Parser> parser = Parser::make_parser("");
-        main_loop_codegen(parser);
+    int flag = -1;
+    while (flag != 0) {
+        std::cout << "Enter 1 => lexer\n"
+                     "Enter 2 => parser\n"
+                     "Enter 3 => interpreter\n"
+                     "Enter 0 => QUIT\n>> ";
+        std::cin >> flag;
+        if (flag == 1) {
+            std::unique_ptr<Lexer> lexer = Lexer::make_lexer("");
+            main_loop(lexer);
+        } else if (flag == 2) {
+            std::unique_ptr<Parser> parser = Parser::make_parser("");
+            main_loop(parser);
+        } else if (flag == 3) {
+            std::unique_ptr<Parser> parser = Parser::make_parser("");
+            main_loop_interpreter(parser);
+        }
     }
-
 }

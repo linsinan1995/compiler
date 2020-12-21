@@ -1,8 +1,14 @@
 //
-// Created by Lin Sinan on 2020-12-16.
+// Created by Lin Sinan on 2020-12-21.
 //
 
+//
+// Created by Lin Sinan on 2020-12-16.
+//
+#include "AST_visitor/AST_Printer.h"
+#include "Ast.h"
 #include "Parser.h"
+
 using namespace parser_ns;
 static int TEST_COUNT = 1;
 #define TEST_NAME(X) printf("==============TEST %d: %-10s==============\n", TEST_COUNT++, X);
@@ -66,36 +72,37 @@ const char *code5 =
         "x(1,2)\n"
         "x(x(1,2),3)";
 
-void driver(std::unique_ptr<Parser> &parser) {
+void driver(std::unique_ptr<Parser> &parser, AST_Printer& visitor) {
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
     for (auto &&expr : v) {
         printf("=========line %d=========\n", line++);
-        expr->print();
+        visitor.evaluate(*expr);
     }
 }
 
 int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
-
     TEST_NAME("simple def")
-    driver(parser);
+
+    AST_Printer printer {};
+    driver(parser, printer);
 
     TEST_NAME("precedence")
     parser = Parser::make_parser(code2);
-    driver(parser);
+    driver(parser, printer);
 
     TEST_NAME("func block")
     parser = Parser::make_parser(code3);
-    driver(parser);
+    driver(parser, printer);
 
     TEST_NAME("if block")
     parser = Parser::make_parser(code4);
-    driver(parser);
+    driver(parser, printer);
 
     TEST_NAME("readme")
     parser = Parser::make_parser(code4);
-    driver(parser);
+    driver(parser, printer);
 }
