@@ -5,6 +5,7 @@
 //
 // Created by Lin Sinan on 2020-12-16.
 //
+#include <fstream>
 #include "AST_visitor/AST_Printer.h"
 #include "Ast.h"
 #include "Parser.h"
@@ -83,6 +84,23 @@ void driver(std::unique_ptr<Parser> &parser, AST_Printer& visitor) {
     }
 }
 
+void driver_to_file(std::unique_ptr<Parser> &parser, const char *file_name) {
+    std::ofstream out(file_name);
+    if (out.bad()) {
+        panic_noreturn("Fail to open/create file %s\n", file_name);
+    }
+
+    AST_Printer visitor (out);
+    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+    if (v.empty()) return ;
+
+    int line = 1;
+    for (auto &&expr : v) {
+        out << "=========line " << line++ << "=========\n";
+        visitor.evaluate(*expr);
+    }
+}
+
 int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
     TEST_NAME("simple def")
@@ -103,6 +121,10 @@ int main() {
     driver(parser, printer);
 
     TEST_NAME("readme")
-    parser = Parser::make_parser(code4);
+    parser = Parser::make_parser(code5);
     driver(parser, printer);
+
+    TEST_NAME("readme")
+    parser = Parser::make_parser(code5);
+    driver_to_file(parser, "out.txt");
 }

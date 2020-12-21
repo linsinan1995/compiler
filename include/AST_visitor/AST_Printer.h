@@ -4,13 +4,18 @@
 
 #ifndef COMPILER_AST_PRINTER_H
 #define COMPILER_AST_PRINTER_H
-#define INDENT_EACH_STEP 2
+#define INDENT_EACH_STEP 4
+
+#include <iostream>
 
 #include "Ast.h"
 
 class AST_Printer : public AST_Visitor {
+    std::ostream &os;
     int cur_indent = -INDENT_EACH_STEP;
 public:
+    AST_Printer() : os(std::cout) {}
+    explicit AST_Printer(std::ostream &m_os) : os(m_os) {}
 
     void evaluate(Expression_AST &) override ;
 

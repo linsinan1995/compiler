@@ -97,65 +97,49 @@ x(x(1,2),3)
 ==============  TEST 5: readme  ==============
 =========line 1=========
 [FUNC]
-[FUNC_PROTO]
-func name: max
-(
-    [VAR_EXP] x
+    func name: x(
+        [VAR_EXP] a
     ,
-    [VAR_EXP] z
-)
+        [VAR_EXP] b
+    )
 func body:
-[BLOCK]
-    [IF_STMT]
-        if [LHS_EXP]
-                [UNARY_EXP]
-                    [VAR_EXP] x
-           [BIN_OP ] op_gt
-           [RHS_EXP]
-                [UNARY_EXP]
-                    [VAR_EXP] z
-        is not 0
-
     [BLOCK]
-        [ASSIGN]
-            [VAR_EXP] x
-            =
-            [UNARY_EXP]
-                [VAR_EXP] z
-        [ASSIGN]
-            [VAR_EXP] z
-            =
-            [UNARY_EXP]
-                [VAR_EXP] x
+    empty code block!
 return:
-    [UNARY_EXP]
-        [VAR_EXP] z
+    [LHS_EXP]
+        [UNARY_EXP]
+            [VAR_EXP] a
+    [BIN_OP ] op_mul
+    [RHS_EXP]
+        [UNARY_EXP]
+            [VAR_EXP] b
 =========line 2=========
 [FUNC_CALL]
-func : max (
+func : x (
     [UNARY_EXP]
-        [FP_EXP] 1.000000
-    ,
+        [FP_EXP] 1
+,
     [UNARY_EXP]
-        [FP_EXP] 3.000000
+        [FP_EXP] 2
 )
 =========line 3=========
 [FUNC_CALL]
-func : max (
+func : x (
     [UNARY_EXP]
         [FUNC_CALL]
-            func : max (
-                [UNARY_EXP]
-                    [FP_EXP] 1.000000
-                ,
-                [UNARY_EXP]
-                    [FP_EXP] 4.000000
+        func : x (
+            [UNARY_EXP]
+                [FP_EXP] 1
+        ,
+            [UNARY_EXP]
+                [FP_EXP] 2
         )
-    ,
+,
     [UNARY_EXP]
-        [FP_EXP] 3.000000
+        [FP_EXP] 3
 )
-============================================
+
+==============================================
 ```
 
 # Execution
