@@ -31,18 +31,22 @@ ptr_While_AST Parser::handle_while_statement() {
 
     // eat while/if keyword
     next();
-    if (cur_token->kind != k_open_paren) return LogError("Missing an open paren!\n");
+    if (cur_token->kind != k_open_paren) return panic_nptr("Parsing Error: Missing an open paren in handle_while_statement! "
+                                                           "The parser expects open paren, but get %s\n",
+                                                           names_kind[cur_token->kind]);
     // eat open paren
     next();
 
     while_expr->cond = parse_expr();
 
-    if (cur_token->kind != k_close_paren) return LogError("Missing an close paren!\n");
+    if (cur_token->kind != k_close_paren) return panic_nptr("Parsing Error: Missing an close paren in handle_while_statement! "
+                                                            "The parser expects open paren, but get %s\n",
+                                                            names_kind[cur_token->kind]);
     // eat close paren
     next();
 
     if (!(while_expr->while_block = std::move(parse_block())))
-        return LogError("Em empty if block!\n");
+        return panic_nptr("Parsing Error: if block is empty!\n");
     return while_expr;
 }
 
@@ -68,18 +72,6 @@ ptr_expr Parser::handle_statement() {
         assign_stmt->rhs = std::move(parse_expr());
         return assign_stmt;
     }
-
-//    // open paren -> f(x)
-//    if (cur_token->kind == k_open_paren) {
-//        auto call_expr = std::make_unique<Function_call_AST> ();
-//        call_expr->name = prev_tok->lexeme;
-//        prev_tok = nullptr;
-//
-//        call_expr->args = parse_func_call_expr();
-//        return call_expr;
-//    }
-
-
     return parse_expr();
 }
 
@@ -107,7 +99,9 @@ ptr_Block_AST Parser::parse_block() {
     auto block = std::make_unique<Block_AST> ();
 
     if (cur_token->kind != k_open_curly)
-        LogError("Missing an open curly!\n");
+        return panic_nptr("Parsing Error: Missing an open curly in parse_block! "
+                          "The parser expects open curly, but get %s\n",
+                          names_kind[cur_token->kind]);
 
     // eat open curly
     next();
@@ -116,7 +110,9 @@ ptr_Block_AST Parser::parse_block() {
         block->v_expr.emplace_back(read_one_statement());
 
         if (cur_token->kind == k_EOF)
-            return LogError("Missing close curly in block parsing!\n");
+            return panic_nptr("Parsing Error: Missing an close curly in parse_block! "
+                              "The parser expects close curly, but get %s\n",
+                              names_kind[cur_token->kind]);
     }
 
     // eat close curly
@@ -132,7 +128,9 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
     next();
 
     if (cur_token->kind != k_open_paren)
-        return LogError("Missing open paren in func proto parsing\n");
+        return panic_nptr("Parsing Error: Missing open paren in parse_func_proto! "
+                          "The parser expects open paren, but get %s\n",
+                          names_kind[cur_token->kind]);
 
     // eat open paren
     next();
@@ -144,7 +142,9 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
     }
 
     if (cur_token->kind != k_close_paren)
-        return LogError("Missing close paren in func call parsing\n");
+        return panic_nptr("Parsing Error: Missing close paren in parse_func_proto! "
+                          "The parser expects close paren, but get %s\n",
+                          names_kind[cur_token->kind]);
 
     return proto;
 }
@@ -157,7 +157,9 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
     func->func_body = std::make_unique<Block_AST> ();
 
     if (cur_token->kind != k_open_curly)
-        LogError("Missing an open curly!\n");
+        return panic_nptr("Parsing Error: Missing open curly in parse_def_func_expr! "
+                          "The parser expects open curly, but get %s\n",
+                          names_kind[cur_token->kind]);
 
     // eat open curly
     next();
@@ -171,11 +173,12 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
             if ((func->return_expr = parse_expr()))
                 break;
             else
-                return LogError("Fail to parse return expr");
+                return panic_nptr("Parsing Error: Fail to parse return expr in parse_def_func_expr\n");
         }
         func->func_body->v_expr.emplace_back(read_one_statement());
 
-        if (cur_token->kind == k_EOF) return LogError("Fail to parse return expr missing close paren\n");
+        if (cur_token->kind == k_EOF) return panic_nptr("Parsing Error: Fail to parse return expr in parse_def_func_expr! "
+                                                        "The parser expects return key word\n");
     }
     // eat close curly
     next();
@@ -190,15 +193,22 @@ ptr_expr Parser::handle_if_statement() {
 
     // eat if keyword
     next();
-    if (cur_token->kind != k_open_paren) return LogError("Missing an open paren!\n");
+    if (cur_token->kind != k_open_paren)
+        return panic_nptr("Parsing Error: Missing open paren in handle_if_statement! "
+                          "The parser expects open paren, but get %s\n",
+                          names_kind[cur_token->kind]);
     // eat open paren
     next();
-    if (cur_token->kind == k_close_paren) return LogError("If condition is empty!\n");
+    if (cur_token->kind == k_close_paren)
+        return panic_nptr("Parsing Error: if condition is an empty expression in handle_if_statement\n");
 
     if (!(if_expr->cond = parse_expr()))
-        return LogError("if condition is empty!\n");
+        return panic_nptr("Parsing Error: if condition is an empty expression in handle_if_statement\n");
 
-    if (cur_token->kind != k_close_paren) return LogError("Missing an close paren!\n");
+    if (cur_token->kind != k_close_paren)
+        return panic_nptr("Parsing Error: Missing close paren in handle_if_statement! "
+                          "The parser expects close paren, but get %s\n",
+                          names_kind[cur_token->kind]);
     // eat close paren
     next();
 
@@ -230,14 +240,19 @@ ptr_assign_expr Parser::parse_assign_expr() {
 
     // check id
     if (cur_token->kind != k_var)
-        throw std::invalid_argument("expect a identifier");
+        return panic_nptr("Parsing Error: Unexpected token in parse_assign_expr! "
+                          "The parser expects variable, but get %s\n",
+                          names_kind[cur_token->kind]);
+
     assign_stmt->var = std::make_unique<Variable_AST>(cur_token->lexeme);
 
     // eat id
     next();
 
     if (cur_token->kind != op_assign)
-        throw std::invalid_argument("expect a '='");
+        return panic_nptr("Parsing Error: Unexpected token in parse_assign_expr! "
+                          "The parser expects assign symbol ('='), but get %s\n",
+                          names_kind[cur_token->kind]);
 
     // eat =
     next();
@@ -274,7 +289,9 @@ ptr_expr Parser::parse_unary_expr() {
 //    std::unique_ptr<Token> tok = prev_tok ? std::move(prev_tok) : std::move(cur_token);
     switch (cur_token->kind) {
         default:
-            return LogError("unknown token when expecting an expression");
+            return panic_nptr("Parsing Error: Unexpected token in parse_unary_expr! "
+                             "The current token is %s\n",
+                             names_kind[cur_token->kind]);
         case op_sub:
             return parse_neg_number_expr();
         case k_int:
@@ -307,7 +324,9 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
     }
 
     if (cur_token->kind != k_close_paren) {
-        LogError("Missing close paren in func call parsing\n");
+        panic("Parsing Error: Missing close paren in parse_unary_expr! "
+              "The parser expects an close paren, but get %s\n",
+              names_kind[cur_token->kind]);
         return {};
     }
 
@@ -379,7 +398,9 @@ ptr_expr Parser::parse_paren_expr() {
     auto expr = parse_expr();
 
     if (cur_token->kind != k_close_paren)
-        return LogError("Missing a close paren!\n");
+        return panic_nptr("Parsing Error: Missing close paren in parse_paren_expr! "
+                          "The parser expects an close paren, but get %s\n",
+                          names_kind[cur_token->kind]);
 
     return expr;
 }
@@ -407,7 +428,8 @@ ptr_expr Parser::read_one_statement() {
             return nullptr;
         case k_unexpected:
             if (cur_token->lexeme.content == nullptr) return nullptr;
-            return LogError(std::string(names_kind[cur_token->kind]) + std::string(" is unexpected!\n"));
+            return panic_nptr("Parsing Error: Unexpected token in read_one_statement! Token literal %s\n",
+                              raw_to_string(cur_token->lexeme).c_str());
         case k_EOF:
             return nullptr;
         case kw_func:

@@ -180,17 +180,19 @@ static bool is_op(Kind k) {
                      op_le, op_ge, op_gt, op_mod, op_pow);
 }
 
-static std::nullptr_t LogError(std::string str) {
-    fprintf(stderr, "LogError: %s\n", str.c_str());
-    return nullptr;
-}
-
-/*[[noreturn]]*/ static void panic(char const* const format, ...) {
+static void panic(char const* const format, ...) {
     va_list args;
     va_start(args, format);
     vfprintf(stdout, format, args);
     va_end(args);
-    // exit(EXIT_FAILURE);
+}
+
+[[noreturn]] static void panic_noreturn(char const* const format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    exit(EXIT_FAILURE);
 }
 
 static std::nullptr_t panic_nptr(char const* const format, ...) {

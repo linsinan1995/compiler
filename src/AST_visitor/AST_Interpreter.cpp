@@ -44,7 +44,8 @@ void AST_Interpreter::visit_binary(Binary_expr_AST &expr) {
 
     switch(expr.op) {
         default:
-            LogError(std::string("Unexpected operator " + std::string(names_kind[expr.op])));
+            panic_nptr("Runtime Error: Unexpected operator in visit_binary! Token type is %s\n",
+                       names_kind[expr.op]);
             val = RT_Value();
             break;
         case op_add:
