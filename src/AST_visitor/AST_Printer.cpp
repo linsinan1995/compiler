@@ -29,7 +29,12 @@ struct Indent {
 
 void AST_Printer::visit_var(Variable_AST &expr) {
     Indent ind(cur_indent);
-    os << ind.get_indent() << "[VAR_EXP] " << raw_to_string(expr.name) << "\n";
+    os << ind.get_indent() << "[VAR_EXP] " << expr.name << "\n";
+}
+
+void AST_Printer::visit_str(STR_AST &expr) {
+    Indent ind(cur_indent);
+    os << ind.get_indent() << "[STRING]" << expr.val << "\n";
 }
 
 void AST_Printer::visit_fp(Float_point_AST &expr) {
@@ -68,7 +73,7 @@ void AST_Printer::visit_binary(Binary_expr_AST &expr) {
 
 void AST_Printer::visit_func_proto(Function_proto_AST &expr) {
     Indent ind(cur_indent);
-    os << ind.get_indent() << "func name: " << raw_to_string(expr.name) << "(\n";
+    os << ind.get_indent() << "func name: " << expr.name << "(\n";
     for (int i=0; i < expr.args.size(); i++) {
         expr.args[i] -> accept(*this);
         if (i < expr.args.size()-1) os << ind.get_indent() << ", \n";
@@ -79,7 +84,7 @@ void AST_Printer::visit_func_proto(Function_proto_AST &expr) {
 void AST_Printer::visit_func_call(Function_call_AST &expr) {
     Indent ind(cur_indent);
     os << ind.get_indent() << "[FUNC_CALL]\n";
-    os << ind.get_indent() << "func : " << raw_to_string(expr.name) <<  " (\n";
+    os << ind.get_indent() << "func : " << expr.name <<  " (\n";
     for (int i=0; i < expr.args.size(); i++) {
         expr.args[i] -> accept(*this);
         if (i < expr.args.size()-1) os << ind.get_indent() << ", \n";

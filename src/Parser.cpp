@@ -27,7 +27,7 @@ static std::map<int, int> precedence {
 };
 
 ptr_While_AST Parser::handle_while_statement() {
-    ptr_While_AST while_expr = std::make_unique<While_AST> ();
+    ptr_While_AST while_expr = std::make_shared<While_AST> ();
 
     // eat while/if keyword
     next();
@@ -63,8 +63,8 @@ ptr_expr Parser::handle_statement() {
 
     // assign
     if (cur_token->kind == op_assign) {
-        auto assign_stmt = std::make_unique<Assign_AST> ();
-        assign_stmt->var = std::make_unique<Variable_AST>(prev_tok->lexeme); // copy
+        auto assign_stmt = std::make_shared<Assign_AST> ();
+        assign_stmt->var = std::make_shared<Variable_AST>(prev_tok->lexeme); // copy
         prev_tok = nullptr;
         // eat =
         next();
@@ -96,7 +96,7 @@ Parser::Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer))
 
 // block -> { expr_1 \n expr_2 \n ... expr_3 \n }
 ptr_Block_AST Parser::parse_block() {
-    auto block = std::make_unique<Block_AST> ();
+    auto block = std::make_shared<Block_AST> ();
 
     if (cur_token->kind != k_open_curly)
         return panic_nptr("Parsing Error: Missing an open curly in parse_block! "
@@ -121,9 +121,9 @@ ptr_Block_AST Parser::parse_block() {
 }
 
 ptr_Function_proto_AST Parser::parse_func_proto() {
-    auto proto = std::make_unique<Function_proto_AST> ();
+    auto proto = std::make_shared<Function_proto_AST> ();
 
-    proto->name = cur_token->lexeme;
+    proto->name = raw_to_string(cur_token->lexeme);
     // eat func name
     next();
 
@@ -151,10 +151,10 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
 
 // block -> { expr_1 \n expr_2 \n ... expr_3 \n return xxx \n }
 ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
-    auto func = std::make_unique<Function_AST> ();
+    auto func = std::make_shared<Function_AST> ();
 
     func->args_with_func_name = std::move(proto);
-    func->func_body = std::make_unique<Block_AST> ();
+    func->func_body = std::make_shared<Block_AST> ();
 
     if (cur_token->kind != k_open_curly)
         return panic_nptr("Parsing Error: Missing open curly in parse_def_func_expr! "
@@ -189,7 +189,7 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
 // if_stmt -> if ( expr ) block
 //            if ( expr ) block else block
 ptr_expr Parser::handle_if_statement() {
-    ptr_If_AST if_expr = std::make_unique<If_AST> ();
+    ptr_If_AST if_expr = std::make_shared<If_AST> ();
 
     // eat if keyword
     next();
@@ -236,7 +236,7 @@ ptr_expr Parser::handle_def_func_statement() {
 }
 
 ptr_assign_expr Parser::parse_assign_expr() {
-    auto assign_stmt = std::make_unique<Assign_AST> ();
+    auto assign_stmt = std::make_shared<Assign_AST> ();
 
     // check id
     if (cur_token->kind != k_var)
@@ -244,7 +244,7 @@ ptr_assign_expr Parser::parse_assign_expr() {
                           "The parser expects variable, but get %s\n",
                           names_kind[cur_token->kind]);
 
-    assign_stmt->var = std::make_unique<Variable_AST>(cur_token->lexeme);
+    assign_stmt->var = std::make_shared<Variable_AST>(cur_token->lexeme);
 
     // eat id
     next();
@@ -266,7 +266,7 @@ inline
 ptr_expr Parser::handle_def_statement() {
     // eat var
     next();
-    auto def_expr    = std::make_unique<Define_AST>();
+    auto def_expr    = std::make_shared<Define_AST>();
     auto assign_expr = parse_assign_expr();
     def_expr->var = std::move(assign_expr->var);
     def_expr->rhs = std::move(assign_expr->rhs);
@@ -294,6 +294,8 @@ ptr_expr Parser::parse_unary_expr() {
                              names_kind[cur_token->kind]);
         case op_sub:
             return parse_neg_number_expr();
+        case k_string:
+            return parse_string_expr();
         case k_int:
             return parse_int_expr();
         case k_fp:
@@ -302,8 +304,8 @@ ptr_expr Parser::parse_unary_expr() {
             return parse_paren_expr();
         case k_var:
             if (peek() == '(') {
-                auto call_expr = std::make_unique<Function_call_AST> ();
-                call_expr->name = cur_token->lexeme;
+                auto call_expr = std::make_shared<Function_call_AST> ();
+                call_expr->name = raw_to_string(cur_token->lexeme);
                 // eat func name
                 next();
                 call_expr->args = parse_func_call_expr();
@@ -324,10 +326,11 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
     }
 
     if (cur_token->kind != k_close_paren) {
-        panic("Parsing Error: Missing close paren in parse_unary_expr! "
-              "The parser expects an close paren, but get %s\n",
-              names_kind[cur_token->kind]);
-        return {};
+
+        return panic_type<std::vector<ptr_Expression_AST>> (
+                "Parsing Error: Missing close paren in parse_unary_expr! "
+                "The parser expects an close paren, but get %s\n",
+                names_kind[cur_token->kind]);
     }
 
     return args;
@@ -335,8 +338,8 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
 
 ptr_expr Parser::parse_atom() {
     if (cur_token->kind == k_open_paren) {
-        auto call_expr = std::make_unique<Function_call_AST> ();
-        call_expr->name = prev_tok->lexeme;
+        auto call_expr = std::make_shared<Function_call_AST> ();
+        call_expr->name = raw_to_string(prev_tok->lexeme);
         prev_tok = nullptr;
 
         call_expr->args = parse_func_call_expr();
@@ -344,7 +347,7 @@ ptr_expr Parser::parse_atom() {
         next();
         return call_expr;
     }
-    return std::make_unique<Variable_AST> (prev_tok->lexeme);
+    return std::make_shared<Variable_AST> (prev_tok->lexeme);
 }
 
 ptr_expr Parser::parse_expr(int prev_prec) {
@@ -352,8 +355,10 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
     if (prev_tok) {
         expr = parse_atom();
+        prev_tok = nullptr;
     } else {
-        expr = std::make_unique<Unary_expr_AST> (parse_unary_expr());
+        expr = std::make_shared<Unary_expr_AST> (parse_unary_expr());
+        if (!expr) return nullptr;
         // eat id
         next();
     }
@@ -368,7 +373,7 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
         // eat op
         next();
-        auto bi_expr = std::make_unique<Binary_expr_AST> (std::move(expr),
+        auto bi_expr = std::make_shared<Binary_expr_AST> (std::move(expr),
                                                           op,
                                                           parse_expr(cur_prec+1));
         expr = std::move(bi_expr); // !
@@ -378,17 +383,22 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
 inline
 ptr_Float_point_AST Parser::parse_fp_expr() {
-    return std::make_unique<Float_point_AST> (get_val_tok_fp(cur_token.get()));
+    return std::make_shared<Float_point_AST> (get_val_tok_fp(cur_token.get()));
 }
 
 inline
 ptr_Integer_AST Parser::parse_int_expr() {
-    return std::make_unique<Integer_AST> (get_val_tok_int(cur_token.get()));
+    return std::make_shared<Integer_AST> (get_val_tok_int(cur_token.get()));
+}
+
+inline
+ptr_STR_AST Parser::parse_string_expr() {
+    return std::make_shared<STR_AST> (cur_token->lexeme);
 }
 
 inline
 ptr_Variable_AST Parser::parse_id_expr() {
-    return std::make_unique<Variable_AST> (cur_token->lexeme);
+    return std::make_shared<Variable_AST> (cur_token->lexeme);
 }
 
 inline
@@ -444,11 +454,11 @@ ptr_expr Parser::parse_neg_number_expr() {
     next();
 
     if (cur_token->kind == k_int) {
-        return std::make_unique<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
+        return std::make_shared<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
     }
 
     if (cur_token->kind == k_fp) {
-        return std::make_unique<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
+        return std::make_shared<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
     }
 
     return panic_nptr("Parsing error : Wrong token type! The parser expects int or fp, "

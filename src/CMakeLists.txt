@@ -34,10 +34,10 @@ add_library(
 add_library(
     libcompiler
     Lexer.cpp
-    Runtime.cpp
+        Interpreter/Runtime.cpp
     Ast.cpp
     Parser.cpp
-    AST_visitor/AST_Interpreter.cpp
+        Interpreter/AST_Interpreter.cpp
     AST_visitor/AST_Printer.cpp
 )
 

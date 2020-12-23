@@ -4,7 +4,7 @@
 
 #ifndef COMPILER_EXPRESSION_H
 #define COMPILER_EXPRESSION_H
-#define PARSER_TEST
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -24,23 +24,24 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 
-#include "Runtime.h"
+#include "Interpreter/Runtime.h"
 #include "AST_visitor.h"
 
-using ptr_Define_AST         = std::unique_ptr<Define_AST>;
-using ptr_Function_proto_AST = std::unique_ptr<Function_proto_AST>;
-using ptr_Function_call_AST  = std::unique_ptr<Function_call_AST>;
-using ptr_Function_AST       = std::unique_ptr<Function_AST>;
-using ptr_Variable_AST       = std::unique_ptr<Variable_AST>;
-using ptr_Expression_AST     = std::unique_ptr<Expression_AST>;
-using ptr_Binary_expr_AST    = std::unique_ptr<Binary_expr_AST>;
-using ptr_Integer_AST        = std::unique_ptr<Integer_AST>;
-using ptr_Float_point_AST    = std::unique_ptr<Float_point_AST>;
-using ptr_Block_AST          = std::unique_ptr<Block_AST>;
-using ptr_Assign_AST         = std::unique_ptr<Assign_AST>;
-using ptr_If_AST             = std::unique_ptr<If_AST>;
-using ptr_While_AST          = std::unique_ptr<While_AST>;
-using ptr_Unary_expr_AST     = std::unique_ptr<Unary_expr_AST>;
+using ptr_Define_AST         = std::shared_ptr<Define_AST>;
+using ptr_Function_proto_AST = std::shared_ptr<Function_proto_AST>;
+using ptr_Function_call_AST  = std::shared_ptr<Function_call_AST>;
+using ptr_Function_AST       = std::shared_ptr<Function_AST>;
+using ptr_Variable_AST       = std::shared_ptr<Variable_AST>;
+using ptr_Expression_AST     = std::shared_ptr<Expression_AST>;
+using ptr_Binary_expr_AST    = std::shared_ptr<Binary_expr_AST>;
+using ptr_Integer_AST        = std::shared_ptr<Integer_AST>;
+using ptr_Float_point_AST    = std::shared_ptr<Float_point_AST>;
+using ptr_Block_AST          = std::shared_ptr<Block_AST>;
+using ptr_Assign_AST         = std::shared_ptr<Assign_AST>;
+using ptr_If_AST             = std::shared_ptr<If_AST>;
+using ptr_While_AST          = std::shared_ptr<While_AST>;
+using ptr_Unary_expr_AST     = std::shared_ptr<Unary_expr_AST>;
+using ptr_STR_AST            = std::shared_ptr<STR_AST>;
 
 struct Expression_AST {
     virtual ~Expression_AST() = default;
@@ -54,6 +55,12 @@ public:
     void accept(AST_Visitor &visitor) override;
 };
 
+struct STR_AST : public Expression_AST {
+public:
+    std::string val;
+    explicit STR_AST(raw_string m_val) : val(raw_to_string(m_val)) {}
+    void accept(AST_Visitor &visitor) override;
+};
 
 struct Float_point_AST : public Expression_AST {
 public:
@@ -63,8 +70,9 @@ public:
 };
 
 struct Variable_AST : public Expression_AST {
-    raw_string name;
-    explicit Variable_AST(raw_string m_name) : name(m_name) {}
+    std::string name;
+    explicit Variable_AST(raw_string& m_name) : name(raw_to_string(m_name))
+    {}
     void accept(AST_Visitor &visitor) override;
 };
 
@@ -75,7 +83,7 @@ struct Block_AST : public Expression_AST {
 };
 
 struct Function_proto_AST : public Expression_AST {
-    raw_string                    name;
+    std::string                   name;
     std::vector<ptr_Variable_AST> args;
 
     void accept(AST_Visitor &visitor) override;
@@ -83,15 +91,15 @@ struct Function_proto_AST : public Expression_AST {
 };
 
 struct Function_AST : public Expression_AST {
-    ptr_Block_AST           func_body;
-    ptr_Expression_AST      return_expr;
-    ptr_Function_proto_AST  args_with_func_name;
+    std::shared_ptr<Block_AST>           func_body;
+    std::shared_ptr<Expression_AST>      return_expr;
+    std::shared_ptr<Function_proto_AST>  args_with_func_name;
 
     void accept(AST_Visitor &visitor) override;
 };
 
 struct Function_call_AST : public Expression_AST {
-    raw_string name;
+    std::string name;
     std::vector<ptr_Expression_AST> args;
 
     void accept(AST_Visitor &visitor) override;

@@ -73,8 +73,14 @@ const char *code5 =
         "x(1,2)\n"
         "x(x(1,2),3)";
 
+const char *code6 =
+        "x = 5\n"
+        "y=6\n"
+        "x>y\n"
+        "x>5";
+
 void driver(std::unique_ptr<Parser> &parser, AST_Printer& visitor) {
-    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
@@ -91,7 +97,7 @@ void driver_to_file(std::unique_ptr<Parser> &parser, const char *file_name) {
     }
 
     AST_Printer visitor (out);
-    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
@@ -124,7 +130,11 @@ int main() {
     parser = Parser::make_parser(code5);
     driver(parser, printer);
 
-    TEST_NAME("readme")
+    TEST_NAME("write to file")
     parser = Parser::make_parser(code5);
     driver_to_file(parser, "out.txt");
+
+    TEST_NAME("debug operator >")
+    parser = Parser::make_parser(code6);
+    driver(parser, printer);
 }

@@ -5,7 +5,7 @@
 #ifndef COMPILER_AST_INTERPRETER_H
 #define COMPILER_AST_INTERPRETER_H
 
-#include "Runtime.h"
+#include "Interpreter/Runtime.h"
 #include "Ast.h"
 
 using namespace runtime_ns;
@@ -14,7 +14,7 @@ class AST_Interpreter : public AST_Visitor {
 public:
     std::shared_ptr<Runtime> rt;
     RT_Value val;
-
+    void reset();
     void evaluate(Expression_AST &) override ;
 
     void visit_def(Define_AST                &) override ;
@@ -30,6 +30,7 @@ public:
     void visit_if(If_AST                     &) override ;
     void visit_while(While_AST               &) override ;
     void visit_unary(Unary_expr_AST          &) override ;
+    void visit_str(STR_AST                   &) override ;
 
     bool is_null() { return val.is_type<VOID>(); }
     AST_Interpreter() : rt(Runtime::make_runtime()),

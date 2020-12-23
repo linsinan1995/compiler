@@ -24,6 +24,7 @@ public:
     void visit_func_call(Function_call_AST   &) override ;
     void visit_func(Function_AST             &) override ;
     void visit_var(Variable_AST              &) override ;
+    void visit_str(STR_AST                   &) override ;
     void visit_binary(Binary_expr_AST        &) override ;
     void visit_int(Integer_AST               &) override ;
     void visit_fp(Float_point_AST            &) override ;

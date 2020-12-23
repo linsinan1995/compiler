@@ -313,3 +313,34 @@ void AST_Printer::visit_if(If_AST &expr) {
     // destructor is evoked when this function call is finished, and it will decrease the cur_indent by 2
 }
 ```
+## using tagged union and placement new to put std::string inside a union
+
+Why use union?
+A: My personal laptop is in a quite old version of MacOS, and it doesn't support generic data containers, such as std::any and std::variant. Also, using boost in such a micro project is not an appealing solution to me.
+
+```cpp
+class RT_Value {
+    union VALUE_Data {
+        float       fp;
+        int         _int{};
+        bool        _bool;
+        std::string _str; // std::string is a class instead of POD type
+                          // to make its layout contiguous, we can use
+                          // placement new => new (ptr) constructor()
+
+        // do not let compilers generate default constructor & destructor to you
+        VALUE_Data()  { fp = 0; }
+        ~VALUE_Data() {} // use ~VALUE_Data() = default leads to an error.
+    };
+    ...
+
+    // to initialize RT_Value, we need to implement a constructor for std::string
+    // but the bad side is that we break the thumb of zero, and thus we need to
+    // implement copy constructor, move constructor and assignment operator...
+    explicit RT_Value(std::string val) : type(STRING) {
+        new (&data._str) std::string(std::move(val));
+    }
+
+    VALUE_Data data;
+};
+```

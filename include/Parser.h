@@ -12,10 +12,10 @@ namespace parser_ns {
 
 class Parser;
 
-using v_expr_ptr = std::vector<std::unique_ptr<Expression_AST>>;
-using ptr_expr = std::unique_ptr<Expression_AST>;
+using v_expr_ptr = std::vector<std::shared_ptr<Expression_AST>>;
+using ptr_expr = std::shared_ptr<Expression_AST>;
 using expr = Expression_AST;
-using ptr_assign_expr = std::unique_ptr<Assign_AST>;
+using ptr_assign_expr = std::shared_ptr<Assign_AST>;
 
 class Parser {
     void next();
@@ -41,6 +41,7 @@ public:
     ptr_Variable_AST        parse_id_expr();
     ptr_Float_point_AST     parse_fp_expr();
     ptr_Integer_AST         parse_int_expr();
+    ptr_STR_AST             parse_string_expr();
     ptr_expr                parse_paren_expr();
     ptr_Block_AST           parse_block();
     ptr_assign_expr         parse_assign_expr();

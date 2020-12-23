@@ -1,3 +1,9 @@
+#include <utility>
+
+#include <utility>
+
+#include <utility>
+
 /******************************************************************* 
  * 
  *    @Time           @Author       @Description
@@ -15,18 +21,18 @@
 // Created by Lin Sinan on 2020-12-19.
 //
 
-#include "Runtime.h"
+#include "Interpreter/Runtime.h"
 using namespace runtime_ns;
 
 using ptr_value = std::unique_ptr<RT_Value>;
 
 void Context::creat_variable(const std::string& id_name, RT_Value val) {
-    vars[id_name] = val;
+    vars[id_name] = std::move(val);
 }
 
 void Context::creat_variables(std::vector<std::string> id_names, std::vector<RT_Value> vals) {
     for (int i = 0; i < id_names.size(); i++) {
-        vars.emplace(std::move(id_names[i]), vals[i]);
+        vars.emplace(std::move(id_names[i]), std::move(vals[i]));
     }
 }
 
@@ -43,8 +49,8 @@ bool Context::has_variable(const std::string& id_name) {
     return vars.find(id_name) != vars.end();
 }
 
-void Context::creat_function(std::string name, const std::shared_ptr<RT_Function> &f) {
-    funcs.emplace(std::move(name), f);
+void Context::creat_function(const std::string& name, std::shared_ptr<RT_Function> f) {
+    funcs.insert({name, f});
 }
 
 bool Context::has_function(const std::string& name) {
@@ -63,17 +69,25 @@ inline bool RT_Value::is_type() {
     return this->type == _Value_Type;
 }
 
+template <int _Value_Type>
+inline bool RT_Value::is_not_type() {
+    return this->type != _Value_Type;
+}
+
+template <> bool RT_Value::is_not_type<STRING>() { return this->type != STRING; }
+template <> bool RT_Value::is_type<STRING>() { return this->type == STRING; }
+
 RT_Value RT_Value::operator+(RT_Value rhs) {
     if (is_type<VOID>() || rhs.is_type<VOID>()) {
         panic("At least one variable is NULL\n");
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(FP, data.fp + rhs.data.fp);
+        return RT_Value(data.fp + rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(INT, data._int + rhs.data._int);
+        return RT_Value(data._int + rhs.data._int);
     }
 
     return RT_Value();
@@ -85,11 +99,11 @@ RT_Value RT_Value::operator-(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(FP, data.fp - rhs.data.fp);
+        return RT_Value(data.fp - rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(INT, data._int - rhs.data._int);
+        return RT_Value(data._int - rhs.data._int);
     }
 
     return RT_Value();
@@ -102,11 +116,11 @@ RT_Value RT_Value::operator*(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(FP, data.fp * rhs.data.fp);
+        return RT_Value(data.fp * rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(INT, data._int * rhs.data._int);
+        return RT_Value(data._int * rhs.data._int);
     }
 
     return RT_Value();
@@ -119,11 +133,11 @@ RT_Value RT_Value::operator/(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(FP, data.fp / rhs.data.fp);
+        return RT_Value(data.fp / rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(INT, data._int / rhs.data._int);
+        return RT_Value(data._int / rhs.data._int);
     }
 
     return RT_Value();
@@ -136,7 +150,7 @@ RT_Value RT_Value::operator%(RT_Value rhs) {
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(INT, data._int / rhs.data._int);
+        return RT_Value(data._int / rhs.data._int);
     }
 
     return RT_Value();
@@ -149,11 +163,11 @@ RT_Value RT_Value::operator>(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(BOOL, data.fp > rhs.data.fp);
+        return RT_Value(data.fp > rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(BOOL, data._int > rhs.data._int);
+        return RT_Value(data._int > rhs.data._int);
     }
 
     return RT_Value();
@@ -166,11 +180,11 @@ RT_Value RT_Value::operator<(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(BOOL, data.fp < rhs.data.fp);
+        return RT_Value(data.fp < rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(BOOL, data._int < rhs.data._int);
+        return RT_Value(data._int < rhs.data._int);
     }
 
     return RT_Value();
@@ -182,11 +196,11 @@ RT_Value RT_Value::operator==(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(BOOL, data.fp == rhs.data.fp);
+        return RT_Value(data.fp == rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(BOOL, data._int == rhs.data._int);
+        return RT_Value(data._int == rhs.data._int);
     }
 
     return RT_Value();
@@ -198,11 +212,11 @@ RT_Value RT_Value::operator>=(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(BOOL, data.fp >= rhs.data.fp);
+        return RT_Value(data.fp >= rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(BOOL, data._int >= rhs.data._int);
+        return RT_Value(data._int >= rhs.data._int);
     }
 
     return RT_Value();
@@ -214,11 +228,11 @@ RT_Value RT_Value::operator<=(RT_Value rhs) {
     }
 
     if (is_type<FP>() && rhs.is_type<FP>()) {
-        return RT_Value(BOOL, data.fp <= rhs.data.fp);
+        return RT_Value(data.fp <= rhs.data.fp);
     }
 
     if (is_type<INT>() && rhs.is_type<INT>()) {
-        return RT_Value(BOOL, data._int <= rhs.data._int);
+        return RT_Value(data._int <= rhs.data._int);
     }
 
     return RT_Value();
@@ -254,8 +268,91 @@ bool RT_Value::to_bool() {
     return false;
 }
 
-void Runtime::creat_function(std::string name, const std::shared_ptr<RT_Function> &f) {
-    contexts.back()->creat_function(std::move(name), f);
+RT_Value &RT_Value::operator=(RT_Value val) {
+        if(&val == this)
+            return *this;
+
+        type = val.type;
+        switch (type) {
+            default:
+                break;
+            case FP:
+                data.fp = val.data.fp;
+                break;
+            case INT:
+                data._int = val.data._int;
+                break;
+            case BOOL:
+                data._bool = val.data._bool;
+                break;
+            case STRING:
+                data._str = std::move(val.data._str);
+                break;
+        }
+        return *this;
+}
+
+RT_Value::RT_Value(const RT_Value &val) {
+    type = val.type;
+    switch (val.type) {
+        default:
+            break;
+        case FP:
+            data.fp = val.data.fp;
+            break;
+        case INT:
+            data._int = val.data._int;
+            break;
+        case BOOL:
+            data._bool = val.data._bool;
+            break;
+        case STRING:
+            data._str = val.data._str;
+            break;
+    }
+}
+
+RT_Value::RT_Value(RT_Value &&val) noexcept {
+    type = val.type;
+    switch (val.type) {
+        default:
+            break;
+        case FP:
+            data.fp = val.data.fp;
+            break;
+        case INT:
+            data._int = val.data._int;
+            break;
+        case BOOL:
+            data._bool = val.data._bool;
+            break;
+        case STRING:
+            data._str = std::move(val.data._str);
+            break;
+    }
+}
+
+std::ostream &runtime_ns::operator<<(std::ostream &os, const RT_Value &val) {
+    switch (val.type) {
+        default:
+            return os;
+        case STRING:
+            os << val.data._str;
+            return os;
+        case FP:
+            os << std::to_string(val.data.fp);
+            return os;
+        case INT:
+            os << std::to_string(val.data._int);
+            return os;
+        case BOOL:
+            os << std::boolalpha << val.data._bool;
+            return os;
+    }
+}
+
+void Runtime::creat_function(const std::string& name, std::shared_ptr<RT_Function> f) {
+    contexts.back()->creat_function(name, f);
 }
 
 Runtime::buildin_func_t Runtime::get_builtin_function(const std::string& name) {
@@ -271,7 +368,7 @@ std::shared_ptr<RT_Function> Runtime::get_function(const std::string &name) {
 }
 
 void Runtime::creat_variable(const std::string& name, RT_Value rt) {
-    contexts[contexts.size()-1]->creat_variable(name, rt);
+    contexts.back()->creat_variable(name, std::move(rt));
 }
 
 RT_Value Runtime::get_variable(const std::string &name) {
@@ -287,7 +384,7 @@ void Runtime::ruin_context() {
 }
 
 void Runtime::creat_variables(std::vector<std::string> id_names, std::vector<RT_Value> vals) {
-    contexts[contexts.size()-1]->creat_variables(std::move(id_names), std::move(vals));
+    contexts.back()->creat_variables(std::move(id_names), std::move(vals));
 }
 
 std::shared_ptr<Runtime> Runtime::make_runtime() {

@@ -3,16 +3,17 @@
 //
 #include <iomanip>
 #include <iostream>
+#include "Interpreter/Builtin_function.hpp"
 #include "AST_visitor/AST_Printer.h"
-#include "AST_visitor/AST_Interpreter.h"
+#include "Interpreter/AST_Interpreter.h"
 #include "Parser.h"
 
 using namespace parser_ns;
-using namespace runtime_ns;
+using namespace register_ns;
 
 void driver(std::unique_ptr<Parser> &parser) {
     AST_Printer printer {};
-    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
@@ -58,48 +59,29 @@ void main_loop(std::unique_ptr<Lexer> &lexer) {
     } while (1);
 }
 
-
-std::ostream& operator<<(std::ostream &os, RT_Value val) {
-    switch (val.type) {
-        default:
-            return os;
-        case FP:
-            os << std::to_string(val.data.fp);
-            return os;
-        case INT:
-            os << std::to_string(val.data._int);
-            return os;
-        case BOOL:
-            os << std::boolalpha << val.data._bool;
-            return os;
-    }
-}
-
-void interpreting(std::unique_ptr<Parser> &parser, std::shared_ptr<AST_Interpreter> &interpreter) {
-    // local interpreter will be destroyed -> use pointer
-    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
-    if (v.empty()) return ;
-
-    int line = 1;
-    for (auto &&expr : v) {
-        interpreter->evaluate(*expr);
-        if (!interpreter->is_null()) {
-            printf("=========line %d=========\n", line++);
-            std::cout << interpreter->val << "\n";
-        }
-    }
-}
-
 void main_loop_interpreter(std::unique_ptr<Parser> &parser) {
     std::string code;
-    auto interpreter = std::make_shared<AST_Interpreter> ();
+    auto interpreter = AST_Interpreter();
+    // set up built in functions
+    auto reg = builtin_register::make_reg();
+    reg->_register(interpreter.rt.get());
 
     do {
         std::cout << ">> ";
         std::getline(std::cin >> std::ws, code);
-        if (code == "QUIT") return ;
         parser->read_RT(code.c_str());
-        interpreting(parser, interpreter);
+        std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
+
+        if (v.empty()) return ;
+
+        int line = 1;
+        for (auto &expr : v) {
+            interpreter.evaluate(*expr);
+            if (!interpreter.is_null()) {
+                printf("=========line %d=========\n", line++);
+                std::cout << interpreter.val << "\n";
+            }
+        }
     } while (1);
 }
 
@@ -109,7 +91,7 @@ int main() {
         std::cout << "Enter 1 => lexer\n"
                      "Enter 2 => parser\n"
                      "Enter 3 => interpreter\n"
-                     "Enter 0 => QUIT\n>> ";
+                     "Enter 0 => quit\n>> ";
         std::cin >> flag;
         if (flag == 1) {
             std::unique_ptr<Lexer> lexer = Lexer::make_lexer("");

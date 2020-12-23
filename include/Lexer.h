@@ -22,6 +22,7 @@ public:
     char eat  ();
     void eat_white_space ();
 
+    void string             (Token*);
     void comment            (Token*);
     void identifier         (Token*);
     void number             (Token*);

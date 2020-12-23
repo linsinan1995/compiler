@@ -1,4 +1,11 @@
 f(1,2)
 func f(a, b) { return a + b }
-f(1,2)
+f(-1,2)
 if (1+2 >= 3) { z = 3 } else { z = 2 } z
+func f2(b, d) { if (b > d) { c = b+d } else { c = 0 } return c }
+func f3(a, b) { if (a > b) { c = a+b } else { c = 0 } return c }
+f2(1,2)
+f2(f3(1,2),1)
+f2(2,1) < f(1,2)
+func f2(b, d) { if (a > b) { c = a+b } else { c = 0 } return c }
+func f(z, x) { return z + x }

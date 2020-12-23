@@ -30,6 +30,7 @@ std::unique_ptr<Token> Lexer::next() {
     char ne = peek();
 
     if (is_comment(ne))                                         comment(token.get());
+    else if(is_left_quote(ne))                                  string(token.get());
     else if(is_identifier_prefix(ne))                           identifier(token.get());
     else if(is_ambigious_operator(token.get(), ne))             ambigious_operator(token.get());
     else if(is_digit(ne))                                       number(token.get());
@@ -153,5 +154,19 @@ void Lexer::load(const char *m_code) {
     src_code = m_code;
 }
 
+void Lexer::string(Token *token) {
+    // eat left quote
+    char ne = eat();
 
+    token->lexeme.content = src_code;
+    token->lexeme.len = 0;
+    token->kind = k_string;
 
+    while (!anyone(ne, '\"', '\0')) {
+        ne = eat();
+        token->lexeme.len++;
+    }
+
+    // eat right quote
+    eat();
+}

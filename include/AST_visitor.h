@@ -9,6 +9,7 @@
 
 struct Expression_AST;
 struct Float_point_AST;
+struct STR_AST;
 struct Variable_AST;
 struct Binary_expr_AST;
 struct Define_AST;
@@ -32,6 +33,7 @@ public:
     virtual void visit_func_call(Function_call_AST   &) = 0;
     virtual void visit_func(Function_AST             &) = 0;
     virtual void visit_var(Variable_AST              &) = 0;
+    virtual void visit_str(STR_AST                   &) = 0;
     virtual void visit_binary(Binary_expr_AST        &) = 0;
     virtual void visit_int(Integer_AST               &) = 0;
     virtual void visit_fp(Float_point_AST            &) = 0;

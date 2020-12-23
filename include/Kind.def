@@ -29,8 +29,10 @@
     X(k_close_curly),\
     X(k_open_paren),\
     X(k_close_paren),\
-    X(k_unexpected)
-
+    X(k_unexpected),\
+    X(k_lquote),\
+    X(k_rquote),\
+    X(k_string)
 
 #define ENUM_STATEMENT_KIND_ENTRY \
     X(k_stmt_if) ,\
@@ -63,3 +65,11 @@
     X(Function_proto_AST_t),\
     X(Unary_expr_AST_t),\
     X(Integer_AST_t)
+
+
+#define ENUM_RUNTIME_VALUE_KIND_ENTRY \
+    X(INT) ,\
+    X(FP) ,\
+    X(STRING),\
+    X(BOOL),\
+    X(VOID)

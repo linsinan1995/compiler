@@ -20,6 +20,7 @@
 inline void Integer_AST::accept(AST_Visitor &visitor) { visitor.visit_int(*this); }
 inline void Float_point_AST::accept(AST_Visitor &visitor) { visitor.visit_fp(*this); }
 inline void Variable_AST::accept(AST_Visitor &visitor) { visitor.visit_var(*this); }
+inline void STR_AST::accept(AST_Visitor &visitor) { visitor.visit_str(*this); }
 inline void Function_proto_AST::accept(AST_Visitor &visitor) { visitor.visit_func_proto(*this);}
 inline void Block_AST::accept(AST_Visitor &visitor) { visitor.visit_block(*this); }
 inline void Unary_expr_AST::accept(AST_Visitor &visitor) { visitor.visit_unary(*this); }

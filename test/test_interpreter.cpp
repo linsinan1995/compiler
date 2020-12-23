@@ -5,8 +5,8 @@
 #include <string>
 #include <iomanip>
 
-#include "AST_visitor/AST_Interpreter.h"
-#include "Runtime.h"
+#include "Interpreter/AST_Interpreter.h"
+#include "Interpreter/Runtime.h"
 #include "Parser.h"
 
 using namespace parser_ns;
@@ -35,6 +35,7 @@ const char *code2 =
         "# f(x)";
 
 const char *code3 =
+        "a = \"wooo\"\n"
         "func max(x, z) {\n"
         "    if (x > z) {"
         "       a = x\n"
@@ -67,24 +68,15 @@ const char *code5 =
         "x(x(1,2),3)";
 
 const char *code6 =
-        "helloworld()\n"
-        "println(123,42,52)";
+        "f(1,2)\n"
+        "func f(a, b) { return a + b }\n"
+        "f(-1,2)\n"
+        "if (1+2 >= 3) { z = 3 } else { z = 2 } z\n"
+        "func f2(a, b) { if (a > b) { c = a+b } else { c = 0 } return c }\n"
+        "f2(1,2)\n"
+        "f2(f(1,2),1)\n"
+        "f2(2,1) <= f(1,2)";
 
-std::ostream& operator<<(std::ostream &os, RT_Value val) {
-    switch (val.type) {
-        default:
-            return os;
-        case FP:
-            os << std::to_string(val.data.fp);
-            return os;
-        case INT:
-            os << std::to_string(val.data._int);
-            return os;
-        case BOOL:
-            os << std::boolalpha << val.data._bool;
-            return os;
-    }
-}
 
 struct builtin_register {
     std::vector<std::pair<std::string, Runtime::buildin_func_t>> funcs;
@@ -96,9 +88,8 @@ struct builtin_register {
 };
 
 void driver(std::unique_ptr<Parser> &parser, AST_Interpreter& visitor) {
-    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
-
     for (auto &&expr : v) {
         visitor.evaluate(*expr);
         if (!visitor.is_null())
@@ -115,13 +106,13 @@ static std::string rt_value_to_string(RT_Value val) {
     return {};
 }
 
-RT_Value builtin_helloworld(Runtime* rt, std::vector<RT_Value> args) {
+RT_Value builtin_helloworld(Runtime* rt, const std::vector<RT_Value>& args) {
     std::cout << "Hello world!\n";
     return RT_Value();
 }
 
-RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
-    for (auto arg : args) {
+RT_Value builtin_println(Runtime* rt, const std::vector<RT_Value>& args) {
+    for (const auto& arg : args) {
         std::cout << rt_value_to_string(arg) << "\n";
     }
     if (args.empty()) std::cout << "\n";
@@ -151,12 +142,8 @@ int main() {
     parser = Parser::make_parser(code5);
     driver(parser, interpreter);
 
-    TEST_NAME("Register a built-in function");
-    builtin_register reg;
-    reg.funcs.emplace_back(std::make_pair("helloworld", builtin_helloworld));
-    reg.funcs.emplace_back(std::make_pair("println", builtin_println));
-
-    reg._register(interpreter.rt.get());
+    TEST_NAME("Bug in operator>")
     parser = Parser::make_parser(code6);
     driver(parser, interpreter);
+
 }

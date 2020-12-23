@@ -146,7 +146,7 @@ void check_keyword(Token *tok) {
         }
     }
 }
-
+static bool is_left_quote(char c) { return c == '\"'; }
 static bool is_comment(char c) { return c == '#'; }
 static bool is_valid_identifier(char c) { return isalnum(c) || c == '_'; }
 static bool is_eof(char c) { return c == '\0'; }
@@ -185,6 +185,15 @@ static void panic(char const* const format, ...) {
     va_start(args, format);
     vfprintf(stdout, format, args);
     va_end(args);
+}
+
+template <typename Ret_Type>
+static Ret_Type panic_type(char const* const format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    return {};
 }
 
 [[noreturn]] static void panic_noreturn(char const* const format, ...) {
