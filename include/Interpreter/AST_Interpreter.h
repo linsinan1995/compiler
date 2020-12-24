@@ -8,12 +8,10 @@
 #include "Interpreter/Runtime.h"
 #include "Ast.h"
 
-using namespace runtime_ns;
-
 class AST_Interpreter : public AST_Visitor {
 public:
-    std::shared_ptr<Runtime> rt;
-    RT_Value val;
+    std::shared_ptr<runtime_ns::Runtime> rt;
+    runtime_ns::RT_Value val;
     void reset();
     void evaluate(Expression_AST &) override ;
 
@@ -35,8 +33,8 @@ public:
 
     void mat_helper(Matrix_AST &expr, std::vector<float>&, std::vector<int>&);
     bool is_null() { return val.is_type<VOID>(); }
-    AST_Interpreter() : rt(Runtime::make_runtime()),
-                        val(RT_Value())
+    AST_Interpreter() : rt(runtime_ns::Runtime::make_runtime()),
+                        val(runtime_ns::RT_Value())
     {}
 };
 

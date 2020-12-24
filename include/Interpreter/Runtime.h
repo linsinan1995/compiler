@@ -16,6 +16,11 @@ struct Block_AST;
 struct Expression_AST;
 
 namespace runtime_ns {
+    class RT_Value;
+    struct RT_Function;
+    class Context;
+    class Runtime;
+
     using Value_Type = int;
 
     struct Mat {
@@ -39,12 +44,12 @@ namespace runtime_ns {
         };
     public:
         RT_Value() : type(VOID) {};
-        explicit RT_Value(float val) : type(FP), data(val) {};
-        explicit RT_Value(bool val) : type(BOOL), data(val) {};
-        explicit RT_Value(int val) : type(INT), data(val) {};
-        explicit RT_Value(Mat val) : type(MATRIX) { new (&data.matrix) Mat(std::move(val)); };
-        // placement new & tagged union for storing string in union
-        explicit RT_Value(std::string val) : type(STRING), data(std::move(val)) {};
+        explicit RT_Value(float val);
+        explicit RT_Value(bool val);
+        explicit RT_Value(int val);
+        explicit RT_Value(Mat val);
+        explicit RT_Value(std::string val);
+
         RT_Value(const RT_Value& val);
         RT_Value(RT_Value&& val) noexcept ;
 
@@ -66,8 +71,16 @@ namespace runtime_ns {
         Value_Type  type;
         VALUE_Data  data;
         bool to_bool();
-        template <int _Value_Type> bool is_type();
-        template <int _Value_Type> bool is_not_type();
+
+        template <int _Value_Type>
+        inline bool is_type() {
+            return this->type == _Value_Type;
+        }
+
+        template <int _Value_Type>
+        inline bool is_not_type() {
+            return this->type != _Value_Type;
+        }
     };
 
     struct RT_Function {

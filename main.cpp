@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include "AST_visitor/AST_Printer.h"
-#include "src/Interpreter/Builtin_function.hpp"
+#include "Interpreter/Builtin_function.hpp"
 #include "Interpreter/AST_Interpreter.h"
 #include "Parser.h"
 

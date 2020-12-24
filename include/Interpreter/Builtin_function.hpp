@@ -9,57 +9,14 @@
 
 #include "Interpreter/Runtime.h"
 
-namespace register_ns {
 
+namespace built_in_function {
     using namespace runtime_ns;
-    RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args);
-    RT_Value builtin_print_func_args(Runtime* rt, std::vector<RT_Value> args);
-    RT_Value builtin_print_statue(Runtime* rt, std::vector<RT_Value> args);
-
-    class builtin_register {
-        using entry = std::pair<std::string, Runtime::builtin_func_t>;
-        std::vector<entry> funcs;
-    public:
-        // as terminator
-        template <typename STR>
-        void push_back(STR&& func, Runtime::builtin_func_t func_ptr) {
-            funcs.emplace_back(std::forward<STR>(func), func_ptr);
-        }
-
-        template <typename STR, typename... Entries>
-        void push_back(STR&& func, Runtime::builtin_func_t func_ptr, Entries && ...args) {
-            funcs.emplace_back(std::forward<STR>(func), func_ptr);
-            push_back(std::forward<Entries> (args)...);
-        }
-
-        void _register(Runtime *rt) const {
-            for (auto & [name, func] : funcs)
-                rt->register_builtin_func(name, func);
-        }
-
-        static
-        void register_to_rt(Runtime *rt) {
-            auto reg = std::make_unique<builtin_register> ();
-            reg->push_back("println" ,  builtin_println,
-                           "func_info", builtin_print_func_args,
-                           "info",      builtin_print_statue);
-            reg->_register(rt);
-        }
-    };
-
-    std::string rt_value_to_string(RT_Value val) {
-        if (val.is_type<VOID>()) return "null";
-        if (val.is_type<STRING>()) return val.data._str;
-        if (val.is_type<INT>()) return std::to_string(val.data._int);
-        if (val.is_type<BOOL>()) return std::to_string(val.data._bool);
-        if (val.is_type<FP>()) return std::to_string(val.data.fp);
-        return {};
-    }
 
     // built in function
     RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
         for (const auto& arg : args) {
-            std::cout << rt_value_to_string(arg) << "\n";
+            std::cout << arg << "\n";
         }
         if (args.empty()) std::cout << "\n";
         return RT_Value();
@@ -117,6 +74,43 @@ namespace register_ns {
         std::cout << "==========================\n";
         return {};
     }
+}
+
+namespace register_ns {
+
+    using namespace runtime_ns;
+
+    class builtin_register {
+        using entry = std::pair<std::string, Runtime::builtin_func_t>;
+        std::vector<entry> funcs;
+    public:
+        // as terminator
+        template <typename STR>
+        void push_back(STR&& func, Runtime::builtin_func_t func_ptr) {
+            funcs.emplace_back(std::forward<STR>(func), func_ptr);
+        }
+
+        template <typename STR, typename... Entries>
+        void push_back(STR&& func, Runtime::builtin_func_t func_ptr, Entries && ...args) {
+            funcs.emplace_back(std::forward<STR>(func), func_ptr);
+            push_back(std::forward<Entries> (args)...);
+        }
+
+        void _register(Runtime *rt) const {
+            for (auto & [name, func] : funcs)
+                rt->register_builtin_func(name, func);
+        }
+
+        static
+        void register_to_rt(Runtime *rt) {
+            using namespace built_in_function;
+            auto reg = std::make_unique<builtin_register> ();
+            reg->push_back("println" ,  builtin_println,
+                           "func_info", builtin_print_func_args,
+                           "info",      builtin_print_statue);
+            reg->_register(rt);
+        }
+    };
 }
 
 #endif //COMPILER_BUILTIN_FUNCTION_H
