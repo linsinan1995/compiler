@@ -306,10 +306,10 @@ dims: 4 2
 # Note
 There are notes on how to engineer some features in this project.
 
-## Putting object with non-trivial ctor to union
+## Putting object with non-trivial ctor to Union
 Why use union?
 
-A: My personal laptop is in a quite old version of MacOS, and it doesn't support generic data containers, such as std::any and std::variant. Also, using boost in such a micro project is not an appealing solution to me.
+A: My personal laptop is in a quite old version of MacOS, and it doesn't support generic data containers, such as std::any and std::variant. Also, using boost in such a micro project is not an appealing solution.
 
 tagged union & placement new
 ```cpp
@@ -379,20 +379,20 @@ void AST_Printer::visit_if(If_AST &expr) {
 }
 ```
 
-## RAII switcher helper
+## RAII switch helper
 RAII with a simple bool lock can be used to print desired result in a recursive function.
 
 ```cpp
 // control the print switch by RAII
-struct Switcher {
-    explicit Switcher(bool &switcher) : switcher(switcher) {
+struct Switch {
+    explicit Switch(bool &_switch) : m_switch(_switch) {
         // Is this object turns on the switch?
-        inner = !switcher;
+        inner = !m_switch;
         // turn on switch
-        if (!switcher) switcher = true;
+        if (!m_switch) m_switch = true;
     }
-    ~Switcher() { if (inner) switcher = false; }
-    bool &switcher;
+    ~Switch() { if (inner) m_switch = false; }
+    bool &m_switch;
     bool inner;
 };
 
@@ -415,12 +415,12 @@ void AST_Printer::visit_mat(Matrix_AST &expr) {
     }
 
     // control print by RAII
-    // by adding an inner lock in Switcher class, we can control the
+    // by adding an inner lock in Switch class, we can control the
     // print result in a recursive function.
 
     // only the first initialization can turn the switch on after
     // it is not alive, the switch will be turned off.
-    Switcher switcher(no_info);
+    Switch switcher(no_info);
 
     for (int i = 0; i < expr.dim[0]; i++) {
         if (auto inner = dynamic_cast<Float_point_AST*> (expr.values[i].get())) {

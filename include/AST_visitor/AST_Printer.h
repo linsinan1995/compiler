@@ -37,4 +37,25 @@ public:
     bool no_info = false;
 };
 
+// control the indentation by RAII
+struct Indent {
+    explicit Indent(int &level) : level(level) { level += INDENT_EACH_STEP; }
+    std::string get_indent() { return std::string(level, ' '); }
+    ~Indent() { level -= INDENT_EACH_STEP; }
+    int &level;
+};
+
+// control the print switch by RAII
+struct Switch {
+    explicit Switch(bool &_switch) : m_switch(_switch) {
+        // Is this object turns on the switch?
+        inner = !m_switch;
+        // turn on switch
+        if (!m_switch) m_switch = true;
+    }
+    ~Switch() { if (inner) m_switch = false; }
+    bool &m_switch;
+    bool inner;
+};
+
 #endif //COMPILER_AST_PRINTER_H

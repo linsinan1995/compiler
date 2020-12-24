@@ -19,27 +19,6 @@
 
 #include "AST_visitor/AST_Printer.h"
 
-// control the indentation by RAII
-struct Indent {
-    explicit Indent(int &level) : level(level) { level += INDENT_EACH_STEP; }
-    std::string get_indent() { return std::string(level, ' '); }
-    ~Indent() { level -= INDENT_EACH_STEP; }
-    int &level;
-};
-
-// control the print switch by RAII
-struct Switcher {
-    explicit Switcher(bool &switcher) : switcher(switcher) {
-        // Is this object turns on the switch?
-        inner = !switcher;
-        // turn on switch
-        if (!switcher) switcher = true;
-    }
-    ~Switcher() { if (inner) switcher = false; }
-    bool &switcher;
-    bool inner;
-};
-
 void AST_Printer::visit_var(Variable_AST &expr) {
     Indent ind(cur_indent);
     os << ind.get_indent() << "[VAR_EXP] " << expr.name << "\n";
@@ -176,7 +155,7 @@ void AST_Printer::visit_mat(Matrix_AST &expr) {
     }
 
     // control print dim or no by RAII
-    Switcher switcher(no_info);
+    Switch switcher(no_info);
 
     for (int i = 0; i < expr.dim[0]; i++) {
         if (auto inner = dynamic_cast<Float_point_AST*> (expr.values[i].get())) {
