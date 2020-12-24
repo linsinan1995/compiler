@@ -17,6 +17,11 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
         - codegen (partial)
   - Code reorganize
     - Visitor pattern for AST
+  - Data type
+    - matrix
+    - fp
+    - string
+  - Built-in functions register
 
 - To do
   - Error handling
@@ -26,7 +31,6 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
     - mutable variable
   - JIT
   - Rich data type
-    - matrix
     - indexing
   - code redesign
     - performance bottleneck (llvm::StringRef, llvm::cl ... )
@@ -164,90 +168,9 @@ x(x(1,2),3);
 A demo for registering functions
 
 ```cpp
-#include <iostream>
+#include "Interpreter/Builtin_function.hpp"
 
-#include "AST_visitor/AST_Interpreter.h"
-#include "Parser.h"
-
-using namespace parser_ns;
-using namespace runtime_ns;
-
-// example code
-const char *code =
-        "# helloworld & println are functions ported from C++ interface\n"
-        "helloworld()\n"
-        "println(123,42,52)";
-
-// helper function for converting RT_Value to std::string
-static std::string rt_value_to_string(RT_Value val) {
-    if (val.is_type<VOID>()) return "null";
-    if (val.is_type<INT>()) return std::to_string(val.data._int);
-    if (val.is_type<BOOL>()) return std::to_string(val.data._bool);
-    if (val.is_type<FP>()) return std::to_string(val.data.fp);
-    return {};
-}
-
-// overwrite << operator for printing results
-std::ostream& operator<<(std::ostream &os, RT_Value val) {
-    switch (val.type) {
-        default:
-            return os;
-        case FP:
-            os << std::to_string(val.data.fp);
-            return os;
-        case INT:
-            os << std::to_string(val.data._int);
-            return os;
-        case BOOL:
-            os << std::boolalpha << val.data._bool;
-            return os;
-    }
-}
-
-// helper class for registering functions
-struct builtin_register {
-    std::vector<std::pair<std::string, Runtime::buildin_func_t>> funcs;
-
-    // use register_builtin_func(std::string function_name, buildin_func_t func_t) to add
-    // your customized functions into the global function symbol map.
-    void _register(Runtime *rt) const {
-        for (auto & [name, func] : funcs)
-            rt->register_builtin_func(name, func);
-    }
-};
-
-// two functions will be registered, std::vector<RT_Value> args is the argument list
-RT_Value builtin_helloworld(Runtime* rt, std::vector<RT_Value> args) {
-    std::cout << "Hello world!\n";
-    return RT_Value();
-}
-
-RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
-    for (auto arg : args) {
-        std::cout << rt_value_to_string(arg) << "\n";
-    }
-    if (args.empty()) std::cout << "\n";
-    return RT_Value();
-}
-
-int main () {
-    builtin_register reg;
-    AST_Interpreter interpreter {};
-
-    reg.funcs.emplace_back(std::make_pair("helloworld", builtin_helloworld));
-    reg.funcs.emplace_back(std::make_pair("println", builtin_println));
-    // dump buildin functions into the global scope of runtime.
-    reg._register(interpreter.rt.get());
-
-    auto parser = Parser::make_parser(code);
-
-    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
-
-    for (auto &&expr : v) {
-        interpreter.evaluate(*expr);
-        if (!interpreter.is_null())
-            std::cout << interpreter.val << "\n";
-    }
+int main() {
 
 }
 ```
@@ -260,27 +183,50 @@ Hello world!
 52.000000
 ```
 
-# Problems on execution condition statement
-
-The current AST structure can not execute code that might return value while branching
-```
-func max(a, b) {
-    if (a > b) { return a }
-    return b
-}
-```
-To execute, you should write like this way
-```
-func max(a, b) {
-    if (a > b) {
-        b = a
-    }
-    return b
-}
-```
-In the interpreter mode, it is easy to be engineered (just add an enum for execution state, break, return, cont).
 
 # Note
+There are notes on how to engineer some features in this project.
+
+## Putting object with non-trivial ctor to union
+Why use union?
+
+A: My personal laptop is in a quite old version of MacOS, and it doesn't support generic data containers, such as std::any and std::variant. Also, using boost in such a micro project is not an appealing solution to me.
+
+tagged union & placement new
+```cpp
+struct Mat {
+    std::vector<float> data;
+    std::vector<int> dim;
+};
+
+class Value {
+    // tagged union can have ctor & dtor in ISO C++
+    union VALUE_Data {
+        float       fp;
+        int         _int;
+        bool        _bool;
+        std::string _str;
+        Mat         matrix;
+        VALUE_Data() {}
+        ~VALUE_Data() {}
+    };
+
+    VALUE_Data data;
+    // VOID, MATRIX are enum value that is used for RTTI
+    RT_Value() : type(VOID) {};
+    ...
+
+    // placement new & tagged union for storing object in union
+    explicit RT_Value(Mat val) : type(MATRIX) { new (&data.matrix) Mat(std::move(val)); };
+
+    // do not forget that we break the rule of five
+    RT_Value(const RT_Value& val);  // new (&data.matrix) Mat(val)
+    RT_Value(RT_Value&& val) noexcept;
+    RT_Value &operator=(RT_Value val);
+}
+```
+
+
 ## RAII helper for indentation control
 ```cpp
 // AST_Printer.cpp
@@ -313,34 +259,92 @@ void AST_Printer::visit_if(If_AST &expr) {
     // destructor is evoked when this function call is finished, and it will decrease the cur_indent by 2
 }
 ```
-## using tagged union and placement new to put std::string inside a union
 
-Why use union?
-A: My personal laptop is in a quite old version of MacOS, and it doesn't support generic data containers, such as std::any and std::variant. Also, using boost in such a micro project is not an appealing solution to me.
+## RAII switcher helper
+RAII with a simple bool lock can be used to print desired result in a recursive function.
 
 ```cpp
-class RT_Value {
-    union VALUE_Data {
-        float       fp;
-        int         _int{};
-        bool        _bool;
-        std::string _str; // std::string is a class instead of POD type
-                          // to make its layout contiguous, we can use
-                          // placement new => new (ptr) constructor()
+// control the print switch by RAII
+struct Switcher {
+    explicit Switcher(bool &switcher) : switcher(switcher) {
+        // Is this object turns on the switch?
+        inner = !switcher;
+        // turn on switch
+        if (!switcher) switcher = true;
+    }
+    ~Switcher() { if (inner) switcher = false; }
+    bool &switcher;
+    bool inner;
+};
 
-        // do not let compilers generate default constructor & destructor to you
-        VALUE_Data()  { fp = 0; }
-        ~VALUE_Data() {} // use ~VALUE_Data() = default leads to an error.
-    };
-    ...
+void AST_Printer::visit_mat(Matrix_AST &expr) {
+    Indent ind(cur_indent);
 
-    // to initialize RT_Value, we need to implement a constructor for std::string
-    // but the bad side is that we break the thumb of zero, and thus we need to
-    // implement copy constructor, move constructor and assignment operator...
-    explicit RT_Value(std::string val) : type(STRING) {
-        new (&data._str) std::string(std::move(val));
+    if (!no_info)
+        os << ind.get_indent() << "[MATRIX]\n";
+
+    if (expr.dim.empty()) {
+        os << ind.get_indent() << "Empty matrix\n";
+        return ;
+    }
+    if (!no_info) {
+        os << ind.get_indent() << "dims: ";
+        for (int i = 0; i < expr.dim.size()-1; i++)
+            os << expr.dim[i] << ",";
+        os << expr.dim.back() << "\n";
+        os << ind.get_indent() << "value:\n";
     }
 
-    VALUE_Data data;
-};
+    // control print by RAII
+    // by adding an inner lock in Switcher class, we can control the
+    // print result in a recursive function.
+
+    // only the first initialization can turn the switch on after
+    // it is not alive, the switch will be turned off.
+    Switcher switcher(no_info);
+
+    for (int i = 0; i < expr.dim[0]; i++) {
+        if (auto inner = dynamic_cast<Float_point_AST*> (expr.values[i].get())) {
+            if (i == 0) {
+                os << ind.get_indent();
+            }
+            os << inner->val << " ";
+        } else {
+            Expression_AST &mat = *(expr.values[i]);
+            visit_mat(dynamic_cast<Matrix_AST&> (mat));
+        }
+    }
+    os << "\n";
+}
+
+```
+
+## Variadic template for pushing data elegantly
+The paradigm below can be easily implemented by using variadic template, but it does not look great for extra function (make_pair).
+```cpp
+push_back(make_pair(a,b),
+          make_pair(c,d),
+          make_pair(e,f))
+```
+
+To do it more elegantly, we can unpack arguments by two, and use one class Entries to store remaining chunks
+```cpp
+// as terminator
+template <typename STR>
+void push_back(STR&& func, Runtime::builtin_func_t func_ptr) {
+    funcs.emplace_back(std::forward<STR>(func), func_ptr);
+}
+
+template <typename STR, typename... Entries>
+void push_back(STR&& func, Runtime::builtin_func_t func_ptr, Entries && ...args) {
+    funcs.emplace_back(std::forward<STR>(func), func_ptr);
+    push_back(std::forward<Entries> (args)...);
+}
+
+// then
+string func_name   = "println";
+string func_name_2 = "func_info";
+reg->push_back(func_name,         builtin_println,
+               move(func_name_2), builtin_print_func_args,
+               "info",            builtin_print_statue);
 ```

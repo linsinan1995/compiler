@@ -10,6 +10,7 @@ static int TEST_COUNT = 1;
 #define TEST_NAME(X) printf("==============TEST: %-10s==============\n", X);
 
 const char *code =
+        "func mat(a,b) { return a*b }\n"
         "x = 24\n"
         "# This is a comment.\n"
         "x = -3\n"
@@ -54,6 +55,9 @@ const char *code5 =
         "x(1,2)\n"
         "x(x(1,2),3)";
 
+const char *code6 =
+        "mat = [[1,2,3], [2,3,4], [5,6,7]]";
+
 void main_loop(std::unique_ptr<Lexer>& lex) {
     std::unique_ptr<Token> token = nullptr;
 
@@ -92,4 +96,7 @@ int main() {
     lex->load(code5);
     main_loop(lex);
 
+    TEST_NAME("matrix")
+    lex->load(code6);
+    main_loop(lex);
 }

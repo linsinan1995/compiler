@@ -98,13 +98,8 @@ Parser::Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer))
 ptr_Block_AST Parser::parse_block() {
     auto block = std::make_shared<Block_AST> ();
 
-    if (cur_token->kind != k_open_curly)
-        return panic_nptr("Parsing Error: Missing an open curly in parse_block! "
-                          "The parser expects open curly, but get %s\n",
-                          names_kind[cur_token->kind]);
-
     // eat open curly
-    next();
+    consume(k_open_curly, "parse_block");
 
     while (cur_token->kind != k_close_curly) {
         block->v_expr.emplace_back(read_one_statement());
@@ -122,6 +117,10 @@ ptr_Block_AST Parser::parse_block() {
 
 ptr_Function_proto_AST Parser::parse_func_proto() {
     auto proto = std::make_shared<Function_proto_AST> ();
+    if (cur_token->kind != k_var) {
+        return panic_nptr("Parsing Error: Function name should be a varibale instead of %s! \n",
+                          names_kind[cur_token->kind]);
+    }
 
     proto->name = raw_to_string(cur_token->lexeme);
     // eat func name
@@ -137,7 +136,6 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
 
     while (!anyone(cur_token->kind, k_close_paren, k_EOF)) {
         proto->args.emplace_back(parse_id_expr());
-        next(); // eat id
         if (cur_token->kind == k_comma) next();
     }
 
@@ -145,7 +143,7 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
         return panic_nptr("Parsing Error: Missing close paren in parse_func_proto! "
                           "The parser expects close paren, but get %s\n",
                           names_kind[cur_token->kind]);
-
+    next();
     return proto;
 }
 
@@ -156,13 +154,7 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
     func->args_with_func_name = std::move(proto);
     func->func_body = std::make_shared<Block_AST> ();
 
-    if (cur_token->kind != k_open_curly)
-        return panic_nptr("Parsing Error: Missing open curly in parse_def_func_expr! "
-                          "The parser expects open curly, but get %s\n",
-                          names_kind[cur_token->kind]);
-
-    // eat open curly
-    next();
+    consume(k_open_curly, "parse_def_func_expr");
 
     while (!anyone(cur_token->kind, k_close_curly, k_EOF, k_unexpected)) {
         while (cur_token->kind == k_comment) next();
@@ -181,7 +173,7 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
                                                         "The parser expects return key word\n");
     }
     // eat close curly
-    next();
+    consume(k_close_curly, "parse_def_func_expr");
 
     return func;
 }
@@ -193,24 +185,16 @@ ptr_expr Parser::handle_if_statement() {
 
     // eat if keyword
     next();
-    if (cur_token->kind != k_open_paren)
-        return panic_nptr("Parsing Error: Missing open paren in handle_if_statement! "
-                          "The parser expects open paren, but get %s\n",
-                          names_kind[cur_token->kind]);
-    // eat open paren
-    next();
+    consume(k_open_paren, "handle_if_statement");
+
     if (cur_token->kind == k_close_paren)
         return panic_nptr("Parsing Error: if condition is an empty expression in handle_if_statement\n");
 
     if (!(if_expr->cond = parse_expr()))
         return panic_nptr("Parsing Error: if condition is an empty expression in handle_if_statement\n");
 
-    if (cur_token->kind != k_close_paren)
-        return panic_nptr("Parsing Error: Missing close paren in handle_if_statement! "
-                          "The parser expects close paren, but get %s\n",
-                          names_kind[cur_token->kind]);
     // eat close paren
-    next();
+    consume(k_close_paren, "handle_if_statement");
 
     if_expr->if_block = std::move(parse_block());
 
@@ -230,8 +214,6 @@ ptr_expr Parser::handle_def_func_statement() {
     next();
     auto proto  = parse_func_proto();
 
-    // eat close paren
-    next();
     return parse_def_func_expr(std::move(proto));
 }
 
@@ -275,6 +257,13 @@ ptr_expr Parser::handle_def_statement() {
 }
 
 inline
+void Parser::consume(Kind kind, const std::string &loc) {
+    if (kind == cur_token->kind) next();
+    else panic("Parsing Error: Unexpected token in %s! Expecting a %s, but got a %s.\n",
+               loc.c_str(), names_kind[kind], names_kind[cur_token->kind]);
+}
+
+inline
 void Parser::next() {
     cur_token = std::move(lexer->next());
 }
@@ -287,11 +276,15 @@ char Parser::peek() {
 
 ptr_expr Parser::parse_unary_expr() {
 //    std::unique_ptr<Token> tok = prev_tok ? std::move(prev_tok) : std::move(cur_token);
-    switch (cur_token->kind) {
+    auto k = cur_token->kind;
+    switch (k) {
         default:
+            next();
             return panic_nptr("Parsing Error: Unexpected token in parse_unary_expr! "
                              "The current token is %s\n",
-                             names_kind[cur_token->kind]);
+                             names_kind[k]);
+        case k_open_bracket:
+            return parse_matrix_expr();
         case op_sub:
             return parse_neg_number_expr();
         case k_string:
@@ -312,6 +305,9 @@ ptr_expr Parser::parse_unary_expr() {
                 return call_expr;
             }
             return parse_id_expr();
+        case k_semi:
+            next();
+            return panic_nptr("Parsing Warning: Do not use semicolon!\n");
     }
 }
 
@@ -332,6 +328,7 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
                 "The parser expects an close paren, but get %s\n",
                 names_kind[cur_token->kind]);
     }
+    next();
 
     return args;
 }
@@ -344,7 +341,6 @@ ptr_expr Parser::parse_atom() {
 
         call_expr->args = parse_func_call_expr();
         // eat close paren
-        next();
         return call_expr;
     }
     return std::make_shared<Variable_AST> (prev_tok->lexeme);
@@ -359,8 +355,6 @@ ptr_expr Parser::parse_expr(int prev_prec) {
     } else {
         expr = std::make_shared<Unary_expr_AST> (parse_unary_expr());
         if (!expr) return nullptr;
-        // eat id
-        next();
     }
 
     while (is_op(cur_token->kind)) {
@@ -383,22 +377,30 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
 inline
 ptr_Float_point_AST Parser::parse_fp_expr() {
-    return std::make_shared<Float_point_AST> (get_val_tok_fp(cur_token.get()));
+    auto expr = std::make_shared<Float_point_AST> (get_val_tok_fp(cur_token.get()));
+    next();
+    return expr;
 }
 
 inline
 ptr_Integer_AST Parser::parse_int_expr() {
-    return std::make_shared<Integer_AST> (get_val_tok_int(cur_token.get()));
+    auto expr = std::make_shared<Integer_AST> (get_val_tok_int(cur_token.get()));
+    next();
+    return expr;
 }
 
 inline
 ptr_STR_AST Parser::parse_string_expr() {
-    return std::make_shared<STR_AST> (cur_token->lexeme);
+    auto expr = std::make_shared<STR_AST> (cur_token->lexeme);
+    next();
+    return expr;
 }
 
 inline
 ptr_Variable_AST Parser::parse_id_expr() {
-    return std::make_shared<Variable_AST> (cur_token->lexeme);
+    auto expr = std::make_shared<Variable_AST> (cur_token->lexeme);
+    next();
+    return expr;
 }
 
 inline
@@ -407,11 +409,7 @@ ptr_expr Parser::parse_paren_expr() {
     next();
     auto expr = parse_expr();
 
-    if (cur_token->kind != k_close_paren)
-        return panic_nptr("Parsing Error: Missing close paren in parse_paren_expr! "
-                          "The parser expects an close paren, but get %s\n",
-                          names_kind[cur_token->kind]);
-
+    consume(k_close_paren, "parse_paren_expr");
     return expr;
 }
 
@@ -446,6 +444,9 @@ ptr_expr Parser::read_one_statement() {
             return handle_def_func_statement();
         case kw_def:
             return handle_def_statement();
+        case k_semi:
+            next();
+            return panic_nptr("Parsing Warning: Do not use semicolon!\n");
     }
 }
 
@@ -454,13 +455,57 @@ ptr_expr Parser::parse_neg_number_expr() {
     next();
 
     if (cur_token->kind == k_int) {
-        return std::make_shared<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
+        auto expr = std::make_shared<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
+        next();
+        return expr;
     }
 
     if (cur_token->kind == k_fp) {
-        return std::make_shared<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
+        auto expr = std::make_shared<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
+        next();
+        return expr;
     }
 
     return panic_nptr("Parsing error : Wrong token type! The parser expects int or fp, "
                       "but get %s" , names_kind[cur_token->kind]);
+}
+
+ptr_expr Parser::parse_matrix_expr() {
+    consume(k_open_bracket, "parse_matrix_expr");
+    auto mat = std::make_shared<Matrix_AST>();
+
+    do {
+        while (cur_token->kind == k_open_bracket) {
+            mat->values.emplace_back(parse_matrix_expr());
+            if (!(mat->values.back())) return panic_nptr("Parsing error: Wrong format of Matrix expression.\n");
+        }
+
+        if (cur_token->kind == k_close_bracket) break;
+
+        if (!anyone(cur_token->kind, k_int, k_fp))
+            return panic_nptr("Parsing error: Wrong data type of Matrix expression. Got type %s\n",
+                              names_kind[cur_token->kind]);
+
+        if (cur_token->kind == k_fp) {
+            mat->values.push_back(parse_fp_expr());
+        } else if (cur_token->kind == k_int) {
+            mat->values.push_back(parse_int_expr());
+        }
+
+        if (cur_token->kind == k_close_bracket) break;
+        consume(k_comma, "parse_matrix_expr");
+    } while (true);
+
+    if (mat->values.empty()) return panic_nptr("Parsing error: Wrong format of Matrix expression.\n");
+    consume(k_close_bracket, "parse_matrix_expr");
+
+    mat->dim.push_back(mat->values.size());
+
+    // update dimensions from most nested matrix
+    auto inner_matrix = dynamic_cast<Matrix_AST*>(mat->values[0].get());
+    if (inner_matrix)
+        mat->dim.insert(mat->dim.end(), inner_matrix->dim.begin(), inner_matrix->dim.end());
+
+    if (cur_token->kind == k_comma) next();
+    return mat;
 }

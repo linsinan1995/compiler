@@ -28,11 +28,13 @@ public:
     void visit_binary(Binary_expr_AST        &) override ;
     void visit_int(Integer_AST               &) override ;
     void visit_fp(Float_point_AST            &) override ;
+    void visit_mat(Matrix_AST                &) override ;
     void visit_block(Block_AST               &) override ;
     void visit_assign(Assign_AST             &) override ;
     void visit_if(If_AST                     &) override ;
     void visit_while(While_AST               &) override ;
     void visit_unary(Unary_expr_AST          &) override ;
+    bool no_info = false;
 };
 
 #endif //COMPILER_AST_PRINTER_H

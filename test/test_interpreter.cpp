@@ -35,7 +35,6 @@ const char *code2 =
         "# f(x)";
 
 const char *code3 =
-        "a = \"wooo\"\n"
         "func max(x, z) {\n"
         "    if (x > z) {"
         "       a = x\n"
@@ -78,8 +77,25 @@ const char *code6 =
         "f2(2,1) <= f(1,2)";
 
 
+const char *code7 =
+        "a = [4,5,6]\n"
+        "b = [1,2,3]\n"
+        "c = a + b\n"
+        "c = a * b\n"
+        "a * [1,1,1]"
+        "a = [[1,2], [3, 4], [5,6]]\n"
+        "b = [[1,2,3], [4,5,6]]\n"
+        "b*a\n"
+        "a*b\n"
+        "[1,1,1]*a\n"
+        "a*[1,1]\n"
+        "func mat(a,b) { return a*b }\n"
+        "var a = [[1,2,3] ,[4,5,6], [7,8,9]]\n"
+        "var b = [[1,2],[3,4],[5,6]]\n"
+        "c = mat(a,b)";
+
 struct builtin_register {
-    std::vector<std::pair<std::string, Runtime::buildin_func_t>> funcs;
+    std::vector<std::pair<std::string, Runtime::builtin_func_t>> funcs;
 
     void _register(Runtime *rt) const {
         for (auto & [name, func] : funcs)
@@ -90,7 +106,7 @@ struct builtin_register {
 void driver(std::unique_ptr<Parser> &parser, AST_Interpreter& visitor) {
     std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
-    for (auto &&expr : v) {
+    for (auto &expr : v) {
         visitor.evaluate(*expr);
         if (!visitor.is_null())
             std::cout << visitor.val << "\n";
@@ -146,4 +162,8 @@ int main() {
     parser = Parser::make_parser(code6);
     driver(parser, interpreter);
 
+    TEST_NAME("matrix")
+    parser = Parser::make_parser(code7);
+    driver(parser, interpreter);
 }
+

@@ -34,6 +34,35 @@ void AST_Interpreter::visit_str(STR_AST &expr) {
     val = RT_Value(expr.val);
 }
 
+void AST_Interpreter::mat_helper(Matrix_AST &expr, std::vector<float> &data, std::vector<int> &dim) {
+    for (int i = 0; i < expr.dim[0]; i++) {
+        if (auto inner = dynamic_cast<Float_point_AST*> (expr.values[i].get())) {
+            data.push_back(inner->val);
+        } else {
+            Expression_AST &inner_mat = *(expr.values[i]);
+            mat_helper(dynamic_cast<Matrix_AST&> (inner_mat), data, dim);
+        }
+    }
+}
+
+void AST_Interpreter::visit_mat(Matrix_AST &expr) {
+    auto dims = std::vector<int> (expr.dim);
+    auto data = std::vector<float> {};
+
+    for (int i = 0; i < expr.dim[0]; i++) {
+        if (auto inner = dynamic_cast<Float_point_AST*> (expr.values[i].get())) {
+            data.push_back(inner->val);
+        } else {
+            Expression_AST &inner_mat = *(expr.values[i]);
+            mat_helper(dynamic_cast<Matrix_AST&> (inner_mat), data, dims);
+        }
+    }
+    Mat mat;
+    mat.dim = dims;
+    mat.data = data;
+    val = RT_Value(mat);
+}
+
 void AST_Interpreter::visit_unary(Unary_expr_AST &expr) {
     expr.LHS->accept(*this);
 }
@@ -174,11 +203,13 @@ void AST_Interpreter::visit_while(While_AST &expr) {
 void AST_Interpreter::visit_def(Define_AST &expr) {
     expr.rhs->accept(*this);
     rt->creat_variable(expr.var->name, val);
+    reset();
 }
 
 void AST_Interpreter::visit_assign(Assign_AST &expr) {
     expr.rhs->accept(*this); // it also assigns value to rt->val
     rt->creat_variable(expr.var->name, val);
+    reset();
 }
 
 void AST_Interpreter::evaluate(Expression_AST &expr) {
@@ -189,5 +220,3 @@ void AST_Interpreter::evaluate(Expression_AST &expr) {
 void AST_Interpreter::reset() {
     val.type = VOID;
 }
-
-

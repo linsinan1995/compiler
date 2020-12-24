@@ -32,7 +32,9 @@
     X(k_unexpected),\
     X(k_lquote),\
     X(k_rquote),\
-    X(k_string)
+    X(k_string),\
+    X(k_close_bracket),\
+    X(k_open_bracket)
 
 #define ENUM_STATEMENT_KIND_ENTRY \
     X(k_stmt_if) ,\
@@ -72,4 +74,5 @@
     X(FP) ,\
     X(STRING),\
     X(BOOL),\
-    X(VOID)
+    X(VOID),\
+    X(MATRIX)

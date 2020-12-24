@@ -18,10 +18,9 @@ using expr = Expression_AST;
 using ptr_assign_expr = std::shared_ptr<Assign_AST>;
 
 class Parser {
+    void consume(Kind, const std::string &);
     void next();
     char peek();
-    Parser() = delete;
-
 public:
     std::unique_ptr<Token> cur_token;
     std::unique_ptr<Token> prev_tok;
@@ -55,6 +54,7 @@ public:
     static std::unique_ptr<Parser> make_parser(const char *code);
 
     ptr_expr parse_neg_number_expr();
+    ptr_expr parse_matrix_expr();
 };
 
 

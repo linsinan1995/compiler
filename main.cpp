@@ -3,8 +3,8 @@
 //
 #include <iomanip>
 #include <iostream>
-#include "Interpreter/Builtin_function.hpp"
 #include "AST_visitor/AST_Printer.h"
+#include "src/Interpreter/Builtin_function.hpp"
 #include "Interpreter/AST_Interpreter.h"
 #include "Parser.h"
 
@@ -63,8 +63,7 @@ void main_loop_interpreter(std::unique_ptr<Parser> &parser) {
     std::string code;
     auto interpreter = AST_Interpreter();
     // set up built in functions
-    auto reg = builtin_register::make_reg();
-    reg->_register(interpreter.rt.get());
+    builtin_register::register_to_rt(interpreter.rt.get());
 
     do {
         std::cout << ">> ";
@@ -74,11 +73,9 @@ void main_loop_interpreter(std::unique_ptr<Parser> &parser) {
 
         if (v.empty()) return ;
 
-        int line = 1;
         for (auto &expr : v) {
             interpreter.evaluate(*expr);
             if (!interpreter.is_null()) {
-                printf("=========line %d=========\n", line++);
                 std::cout << interpreter.val << "\n";
             }
         }

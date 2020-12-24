@@ -69,6 +69,13 @@ public:
     void accept(AST_Visitor &visitor) override;
 };
 
+struct Matrix_AST : public Expression_AST {
+public:
+    std::vector<ptr_Expression_AST > values;
+    std::vector<int> dim;
+    void accept(AST_Visitor &visitor) override;
+};
+
 struct Variable_AST : public Expression_AST {
     std::string name;
     explicit Variable_AST(raw_string& m_name) : name(raw_to_string(m_name))
@@ -87,7 +94,6 @@ struct Function_proto_AST : public Expression_AST {
     std::vector<ptr_Variable_AST> args;
 
     void accept(AST_Visitor &visitor) override;
-
 };
 
 struct Function_AST : public Expression_AST {

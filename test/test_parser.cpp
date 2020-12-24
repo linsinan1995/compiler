@@ -14,8 +14,6 @@ using namespace parser_ns;
 static int TEST_COUNT = 1;
 #define TEST_NAME(X) printf("==============TEST %d: %-10s==============\n", TEST_COUNT++, X);
 
-void print_expression(Expression_AST *exp);
-
 const char *code3 =
         "var x = (2 + 3) * 4\n"
         "x = 2 + 3 * 4\n"
@@ -79,6 +77,11 @@ const char *code6 =
         "x>y\n"
         "x>5";
 
+const char *code7 =
+        "a = [4,5,6]\n"
+        "b = [1,2,3]\n"
+        "c = [1,2,3] + b\n";
+
 void driver(std::unique_ptr<Parser> &parser, AST_Printer& visitor) {
     std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
@@ -110,7 +113,6 @@ void driver_to_file(std::unique_ptr<Parser> &parser, const char *file_name) {
 int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
     TEST_NAME("simple def")
-
     AST_Printer printer {};
     driver(parser, printer);
 
@@ -136,5 +138,9 @@ int main() {
 
     TEST_NAME("debug operator >")
     parser = Parser::make_parser(code6);
+    driver(parser, printer);
+
+    TEST_NAME("matrix")
+    parser = Parser::make_parser(code7);
     driver(parser, printer);
 }

@@ -73,6 +73,12 @@ bool is_uni_operator(Token* token, char op) {
         case '-':
             token->kind = op_sub;
             return true;
+        case '[':
+            token->kind = k_open_bracket;
+            return true;
+        case ']':
+            token->kind = k_close_bracket;
+            return true;
         default:
             return false;
     }

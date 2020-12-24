@@ -27,6 +27,19 @@ struct Indent {
     int &level;
 };
 
+// control the print switch by RAII
+struct Switcher {
+    explicit Switcher(bool &switcher) : switcher(switcher) {
+        // Is this object turns on the switch?
+        inner = !switcher;
+        // turn on switch
+        if (!switcher) switcher = true;
+    }
+    ~Switcher() { if (inner) switcher = false; }
+    bool &switcher;
+    bool inner;
+};
+
 void AST_Printer::visit_var(Variable_AST &expr) {
     Indent ind(cur_indent);
     os << ind.get_indent() << "[VAR_EXP] " << expr.name << "\n";
@@ -142,4 +155,39 @@ void AST_Printer::visit_assign(Assign_AST &expr) {
 
 void AST_Printer::evaluate(Expression_AST &expr) {
     expr.accept(*this);
+}
+
+void AST_Printer::visit_mat(Matrix_AST &expr) {
+    Indent ind(cur_indent);
+
+    if (!no_info)
+        os << ind.get_indent() << "[MATRIX]\n";
+
+    if (expr.dim.empty()) {
+        os << ind.get_indent() << "Empty matrix\n";
+        return ;
+    }
+    if (!no_info) {
+        os << ind.get_indent() << "dims: ";
+        for (int i = 0; i < expr.dim.size()-1; i++)
+            os << expr.dim[i] << ",";
+        os << expr.dim.back() << "\n";
+        os << ind.get_indent() << "value:\n";
+    }
+
+    // control print dim or no by RAII
+    Switcher switcher(no_info);
+
+    for (int i = 0; i < expr.dim[0]; i++) {
+        if (auto inner = dynamic_cast<Float_point_AST*> (expr.values[i].get())) {
+            if (i == 0) {
+                os << ind.get_indent();
+            }
+            os << inner->val << " ";
+        } else {
+            Expression_AST &mat = *(expr.values[i]);
+            visit_mat(dynamic_cast<Matrix_AST&> (mat));
+        }
+    }
+    os << "\n";
 }

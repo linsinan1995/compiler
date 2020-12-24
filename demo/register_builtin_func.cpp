@@ -24,13 +24,13 @@ const char *code =
         "info()";
 
 struct builtin_register {
-    using entry = std::pair<std::string, Runtime::buildin_func_t>;
+    using entry = std::pair<std::string, Runtime::builtin_func_t>;
     std::vector<entry> funcs;
 
     // as terminator
     void push_back() {};
     template <typename STR, typename... Entries>
-    void push_back(STR&& func, Runtime::buildin_func_t func_ptr, Entries && ...args) {
+    void push_back(STR&& func, Runtime::builtin_func_t func_ptr, Entries && ...args) {
         funcs.emplace_back(std::forward<STR>(func), func_ptr);
         push_back(std::forward<Entries> (args)...);
     }

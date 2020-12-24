@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "Runtime.h"
+#include "Interpreter/Runtime.h"
 
 namespace register_ns {
 
@@ -17,13 +17,17 @@ namespace register_ns {
     RT_Value builtin_print_statue(Runtime* rt, std::vector<RT_Value> args);
 
     class builtin_register {
-        using entry = std::pair<std::string, Runtime::buildin_func_t>;
+        using entry = std::pair<std::string, Runtime::builtin_func_t>;
         std::vector<entry> funcs;
     public:
         // as terminator
-        void push_back() {};
+        template <typename STR>
+        void push_back(STR&& func, Runtime::builtin_func_t func_ptr) {
+            funcs.emplace_back(std::forward<STR>(func), func_ptr);
+        }
+
         template <typename STR, typename... Entries>
-        void push_back(STR&& func, Runtime::buildin_func_t func_ptr, Entries && ...args) {
+        void push_back(STR&& func, Runtime::builtin_func_t func_ptr, Entries && ...args) {
             funcs.emplace_back(std::forward<STR>(func), func_ptr);
             push_back(std::forward<Entries> (args)...);
         }
@@ -34,12 +38,12 @@ namespace register_ns {
         }
 
         static
-        std::unique_ptr<builtin_register> make_reg() {
+        void register_to_rt(Runtime *rt) {
             auto reg = std::make_unique<builtin_register> ();
             reg->push_back("println" ,  builtin_println,
                            "func_info", builtin_print_func_args,
                            "info",      builtin_print_statue);
-            return reg;
+            reg->_register(rt);
         }
     };
 

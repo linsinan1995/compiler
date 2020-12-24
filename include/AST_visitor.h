@@ -22,12 +22,13 @@ struct While_AST;
 struct Function_proto_AST;
 struct Unary_expr_AST;
 struct Integer_AST;
-
+struct Matrix_AST;
 
 class AST_Visitor {
 public:
     virtual void evaluate(Expression_AST &) = 0;
 
+    virtual void visit_mat(Matrix_AST                &) = 0;
     virtual void visit_def(Define_AST                &) = 0;
     virtual void visit_func_proto(Function_proto_AST &) = 0;
     virtual void visit_func_call(Function_call_AST   &) = 0;

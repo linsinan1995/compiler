@@ -31,7 +31,9 @@ public:
     void visit_while(While_AST               &) override ;
     void visit_unary(Unary_expr_AST          &) override ;
     void visit_str(STR_AST                   &) override ;
+    void visit_mat(Matrix_AST                &) override ;
 
+    void mat_helper(Matrix_AST &expr, std::vector<float>&, std::vector<int>&);
     bool is_null() { return val.is_type<VOID>(); }
     AST_Interpreter() : rt(Runtime::make_runtime()),
                         val(RT_Value())
