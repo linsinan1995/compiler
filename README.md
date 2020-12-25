@@ -2,7 +2,7 @@
 Design a language with interpreter, JIT and AoT compilation execution modes. It is supposed to support high performance matrix multiplication through utilizing MLIR.
 
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/other/res.png" img width="350">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/other/res.png" img width="400">
 </p>
 
 # Table of Contents
