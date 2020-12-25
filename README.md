@@ -4,6 +4,20 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
 <p align="center">
   <img src="https://github.com/linsinan1995/compiler/blob/master/other/res.png" img width="350">
 </p>
+
+# Table of Contents
+- [Intro](#intro)
+- [Work List](#work-list)
+- [Lexing](#lexing)
+- [Parsing](#parsing)
+- [Execution](#execution)
+  * [1.Interpreter](#1interpreter)
+- [Register customized built-in functions](#register-customized-built-in-functions)
+- [Note](#note)
+  * [Putting object with non-trivial ctor to Union](#putting-object-with-non-trivial-ctor-to-union)
+  * [RAII helper for indentation control](#raii-helper-for-indentation-control)
+  * [RAII switch helper](#raii-switch-helper)
+  * [Variadic template for pushing data elegantly](#variadic-template-for-pushing-data-elegantly)
   
 # Work List
 - Finished
@@ -164,7 +178,7 @@ x(x(1,2),3);
 ==============================================
 ```
 
-# Register built-in function from C++
+# Register customized built-in functions
 A demo for registering functions
 
 ```cpp
