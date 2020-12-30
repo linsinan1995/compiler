@@ -24,6 +24,20 @@ void AST_Printer::visit_var(Variable_AST &expr) {
     os << ind.get_indent() << "[VAR_EXP] " << expr.name << "\n";
 }
 
+void AST_Printer::visit_class_var(Class_Var_AST &expr) {
+    Indent ind(cur_indent);
+    os << ind.get_indent() << "[CLASS_VAR_EXP] \n";
+    os << ind.get_indent() << "object name: " << expr.obj_name << "\n";
+    os << ind.get_indent() << "member variable: " << expr.var_name << "\n";
+}
+
+void AST_Printer::visit_class_decl(Class_Decl_AST &expr) {
+    Indent ind(cur_indent);
+    os << ind.get_indent() << "[CLASS_DECL_EXPR] \n";
+    os << ind.get_indent() << "name: " << expr.var_name << "\n";
+    os << ind.get_indent() << "type: " << expr.class_name << "\n";
+}
+
 void AST_Printer::visit_str(STR_AST &expr) {
     Indent ind(cur_indent);
     os << ind.get_indent() << "[STRING]" << expr.val << "\n";
@@ -43,6 +57,33 @@ void AST_Printer::visit_unary(Unary_expr_AST &expr) {
     Indent ind(cur_indent);
     os << ind.get_indent() << "[UNARY_EXP]\n";
     expr.LHS->accept(*this);
+}
+
+void AST_Printer::visit_class(Class_AST &expr) {
+    Indent ind(cur_indent);
+    os << ind.get_indent() << "[Class_EXP] " << expr.type_name << "\n";
+
+
+    if (expr.vars.empty()) {
+        os << ind.get_indent() << "No member variables!\n";
+    } else {
+        os << ind.get_indent() << "Class member variables: \n";
+    }
+
+    for (auto &expr_entry : expr.vars) {
+        expr_entry->accept(*this);
+    }
+
+
+    if (expr.funcs.empty()) {
+        os << ind.get_indent() << "No member functions!\n";
+    } else {
+        os << ind.get_indent() << "Class member functions: \n";
+    }
+
+    for (auto &expr_entry : expr.funcs) {
+        expr_entry->accept(*this);
+    }
 }
 
 void AST_Printer::visit_block(Block_AST &expr) {
@@ -73,15 +114,34 @@ void AST_Printer::visit_func_proto(Function_proto_AST &expr) {
     os << ind.get_indent() << ")\n";
 }
 
+void AST_Printer::visit_class_call(Class_Call_AST &expr) {
+    Indent ind(cur_indent);
+    os << ind.get_indent() << "[CLASS_MENBER_FUNC_CALL]\n";
+    os << ind.get_indent() << "Variable name: " << expr.obj_name << "\n";
+    os << ind.get_indent() << "function name : " << expr.func_name <<  " (";
+
+    if (expr.args.empty()) os << ind.get_indent() << " VOID )\n";
+
+    for (int i=0; i < expr.args.size(); i++) {
+        expr.args[i]->accept(*this);
+        if (i < expr.args.size()-1) os << ind.get_indent() << ", \n";
+    }
+
+    if (!expr.args.empty()) os << ind.get_indent() << ")\n";
+}
+
 void AST_Printer::visit_func_call(Function_call_AST &expr) {
     Indent ind(cur_indent);
     os << ind.get_indent() << "[FUNC_CALL]\n";
-    os << ind.get_indent() << "func : " << expr.name <<  " (\n";
+    os << ind.get_indent() << "func : " << expr.name <<  " (";
+
+    if (expr.args.empty()) os << ind.get_indent() << " VOID )\n";
+
     for (int i=0; i < expr.args.size(); i++) {
         expr.args[i] -> accept(*this);
         if (i < expr.args.size()-1) os << ind.get_indent() << ", \n";
     }
-    os << ind.get_indent() << ")\n";
+    if (!expr.args.empty()) os << ind.get_indent() << ")\n";
 }
 
 void AST_Printer::visit_func(Function_AST &expr) {
@@ -91,7 +151,10 @@ void AST_Printer::visit_func(Function_AST &expr) {
     os << ind.get_indent() << "func body: \n";
     expr.func_body->accept(*this);
     os << ind.get_indent() << "return: \n";
-    expr.return_expr->accept(*this);
+    if (expr.return_expr)
+        expr.return_expr->accept(*this);
+    else
+        os << ind.get_indent() << "No return value\n";
 }
 
 void AST_Printer::visit_if(If_AST &expr) {

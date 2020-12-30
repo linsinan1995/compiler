@@ -29,25 +29,73 @@ static std::map<int, int> precedence {
 ptr_While_AST Parser::handle_while_statement() {
     ptr_While_AST while_expr = std::make_shared<While_AST> ();
 
-    // eat while/if keyword
+    // eat while
     next();
-    if (cur_token->kind != k_open_paren) return panic_nptr("Parsing Error: Missing an open paren in handle_while_statement! "
-                                                           "The parser expects open paren, but get %s\n",
-                                                           names_kind[cur_token->kind]);
+
     // eat open paren
-    next();
+    consume(k_open_paren, "handle_while_statement");
 
     while_expr->cond = parse_expr();
 
-    if (cur_token->kind != k_close_paren) return panic_nptr("Parsing Error: Missing an close paren in handle_while_statement! "
-                                                            "The parser expects open paren, but get %s\n",
-                                                            names_kind[cur_token->kind]);
-    // eat close paren
-    next();
+    consume(k_close_paren, "handle_while_statement");
+
 
     if (!(while_expr->while_block = std::move(parse_block())))
         return panic_nptr("Parsing Error: if block is empty!\n");
     return while_expr;
+}
+
+ptr_expr Parser::handle_class_statement() {
+    ptr_Class_AST class_expr = std::make_shared<Class_AST> ();
+
+    // eat class keyword
+    next();
+
+    if (cur_token->kind != k_var) return panic_nptr("Parsing Error: The parser expects a k_var, "
+                                                    "but get %s\n", names_kind[cur_token->kind]);
+
+    class_expr->type_name = raw_to_string(cur_token->lexeme);
+    lexer->register_class(cur_token.get());
+
+    next();
+    // eat open curly
+    consume(k_open_curly, "handle_class_statement");
+
+    while (anyone(cur_token->kind, kw_func, kw_def, k_var)) {
+        if (cur_token->kind == kw_func)
+            class_expr->funcs.emplace_back(handle_def_func_statement());
+        else if (cur_token->kind == kw_def)
+            class_expr->vars.emplace_back(handle_def_statement());
+        else {
+            prev_tok = std::move(cur_token);
+            next();
+
+            // assign
+            if (cur_token->kind == op_assign) {
+                auto assign_stmt = std::make_shared<Assign_AST> ();
+                assign_stmt->var = std::make_shared<Variable_AST>(prev_tok->lexeme); // copy
+                prev_tok = nullptr;
+                // eat =
+                next();
+                assign_stmt->rhs = std::move(parse_expr());
+
+                class_expr->vars.emplace_back(std::move(assign_stmt));
+
+                if (cur_token->kind == k_semi) {
+                    panic("Parsing warning: Do not recommend to use semicolon!\n");
+                    next();
+                }
+            } else {
+                panic("Parsing warning: Unknown expression in handle_class_statement!\n");
+                parse_expr(); // error handling by assuming it is a invalid expression
+            }
+        }
+    }
+
+    // eat close curly
+    consume(k_close_curly, "handle_class_statement");
+
+    return class_expr;
 }
 
 // var =  expr
@@ -55,7 +103,7 @@ ptr_While_AST Parser::handle_while_statement() {
 // func(3) op expr ...
 // var other op expr
 //    return parse_assign_expr();
-ptr_expr Parser::handle_statement() {
+ptr_expr Parser::handle_general_statement() {
     if (cur_token->kind != k_var) return parse_expr();
 
     prev_tok = std::move(cur_token);
@@ -71,9 +119,60 @@ ptr_expr Parser::handle_statement() {
 
         assign_stmt->rhs = std::move(parse_expr());
         return assign_stmt;
+    } else if (cur_token->kind == k_dot) {
+        // eat k_dot
+        next();
+        if (cur_token->kind != k_var) {
+            prev_tok = nullptr;
+            return panic_nptr("Parsing Error: Unexpected exprssion! "
+                              "Parser does not understand the k_dot in this "
+                              "expression\n");
+        }
+
+        auto dot_var_name = raw_to_string(cur_token->lexeme);
+        // eat k_var
+        next();
+
+        // check it is a member variable or member function
+        if (cur_token->kind == k_open_paren) {
+            auto object_call_stmt = std::make_shared<Class_Call_AST> ();
+            object_call_stmt->obj_name = raw_to_string(prev_tok->lexeme);
+            object_call_stmt->func_name = std::move(dot_var_name);
+            // reset prev_tok before parsing expression!
+            prev_tok = nullptr;
+            object_call_stmt->args = parse_func_call_expr();
+
+            return object_call_stmt;
+        } else {
+            auto object_var_stmt = std::make_shared<Class_Var_AST> ();
+            object_var_stmt->obj_name = raw_to_string(prev_tok->lexeme);
+            object_var_stmt->var_name = std::move(dot_var_name);
+            prev_tok = nullptr;
+            return object_var_stmt;
+        }
     }
+
     return parse_expr();
 }
+
+
+ptr_expr Parser::handle_class_decl() {
+    auto expr = std::make_shared<Class_Decl_AST>();
+    expr->class_name = raw_to_string(cur_token->lexeme);
+
+    // eat class name
+    next();
+
+    if (cur_token->kind != k_var)
+        return panic_nptr("Parsing Error: Missing a k_var in handle_class_decl! "
+                          "The parser expects a k_var, but get %s\n",
+                          names_kind[cur_token->kind]);
+
+    expr->var_name = raw_to_string(cur_token->lexeme);
+    next();
+    return expr;
+}
+
 
 v_expr_ptr Parser::parse() {
     v_expr_ptr parsed_vec_stmt {};
@@ -118,7 +217,7 @@ ptr_Block_AST Parser::parse_block() {
 ptr_Function_proto_AST Parser::parse_func_proto() {
     auto proto = std::make_shared<Function_proto_AST> ();
     if (cur_token->kind != k_var) {
-        return panic_nptr("Parsing Error: Function name should be a varibale instead of %s! \n",
+        return panic_nptr("Parsing Error: Function name should be a k_var instead of %s! \n",
                           names_kind[cur_token->kind]);
     }
 
@@ -139,11 +238,7 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
         if (cur_token->kind == k_comma) next();
     }
 
-    if (cur_token->kind != k_close_paren)
-        return panic_nptr("Parsing Error: Missing close paren in parse_func_proto! "
-                          "The parser expects close paren, but get %s\n",
-                          names_kind[cur_token->kind]);
-    next();
+    consume(k_close_paren, "parse_func_proto");
     return proto;
 }
 
@@ -162,10 +257,14 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
         if (cur_token->kind == kw_return) {
             // eat return
             next();
-            if ((func->return_expr = parse_expr()))
+            if ((func->return_expr = parse_expr())) {
+                if (cur_token->kind == k_semi) {
+                    panic("Parsing warning: Do not recommend to use semicolon!\n");
+                    next();
+                }
                 break;
-            else
-                return panic_nptr("Parsing Error: Fail to parse return expr in parse_def_func_expr\n");
+            } else return panic_nptr("Parsing Error: Fail to parse "
+                                     "return expr in parse_def_func_expr\n");
         }
         func->func_body->v_expr.emplace_back(read_one_statement());
 
@@ -209,12 +308,19 @@ ptr_expr Parser::handle_if_statement() {
 }
 
 // def_func_stmt -> func fun_name func_paren block
-ptr_expr Parser::handle_def_func_statement() {
+ptr_Function_AST Parser::handle_def_func_statement() {
     // eat func
     next();
     auto proto  = parse_func_proto();
 
-    return parse_def_func_expr(std::move(proto));
+    auto res = parse_def_func_expr(std::move(proto));
+
+    if (cur_token->kind == k_semi) {
+        panic("Parsing warning: Do not recommend to use semicolon!\n");
+        next();
+    }
+
+    return res;
 }
 
 ptr_assign_expr Parser::parse_assign_expr() {
@@ -240,12 +346,13 @@ ptr_assign_expr Parser::parse_assign_expr() {
     next();
 
     assign_stmt->rhs = parse_expr();
+
     return assign_stmt;
 }
 
 // def_stmt -> var id = expression
 inline
-ptr_expr Parser::handle_def_statement() {
+ptr_Define_AST Parser::handle_def_statement() {
     // eat var
     next();
     auto def_expr    = std::make_shared<Define_AST>();
@@ -253,6 +360,12 @@ ptr_expr Parser::handle_def_statement() {
     def_expr->var = std::move(assign_expr->var);
     def_expr->rhs = std::move(assign_expr->rhs);
     assign_expr = nullptr;
+
+    if (cur_token->kind == k_semi) {
+        panic("Parsing warning: Do not recommend to use semicolon!\n");
+        next();
+    }
+
     return def_expr;
 }
 
@@ -357,7 +470,7 @@ ptr_expr Parser::parse_expr(int prev_prec) {
         if (!expr) return nullptr;
     }
 
-    while (is_op(cur_token->kind)) {
+    while (lexer->is_op(cur_token->kind)) {
         Kind op = cur_token->kind;
 
         int cur_prec = precedence[static_cast<int>(op)];
@@ -411,43 +524,6 @@ ptr_expr Parser::parse_paren_expr() {
 
     consume(k_close_paren, "parse_paren_expr");
     return expr;
-}
-
-std::unique_ptr<Parser> Parser::make_parser(const char *code) {
-    return std::make_unique<Parser> (Lexer::make_lexer(code));
-}
-
-void Parser::read_RT(const char *code) {
-    lexer->load(code);
-}
-
-ptr_expr Parser::read_one_statement() {
-    while (cur_token->kind == k_comment) next();
-
-    switch (cur_token->kind) {
-        default:
-            return handle_statement();
-        case kw_while:
-            return handle_while_statement();
-        case kw_if:
-            return handle_if_statement();
-        case k_close_paren:
-        case k_close_curly:
-            return nullptr;
-        case k_unexpected:
-            if (cur_token->lexeme.content == nullptr) return nullptr;
-            return panic_nptr("Parsing Error: Unexpected token in read_one_statement! Token literal %s\n",
-                              raw_to_string(cur_token->lexeme).c_str());
-        case k_EOF:
-            return nullptr;
-        case kw_func:
-            return handle_def_func_statement();
-        case kw_def:
-            return handle_def_statement();
-        case k_semi:
-            next();
-            return panic_nptr("Parsing Warning: Do not use semicolon!\n");
-    }
 }
 
 ptr_expr Parser::parse_neg_number_expr() {
@@ -508,4 +584,38 @@ ptr_expr Parser::parse_matrix_expr() {
 
     if (cur_token->kind == k_comma) next();
     return mat;
+}
+
+std::unique_ptr<Parser> Parser::make_parser(const char *code) {
+    return std::make_unique<Parser> (Lexer::make_lexer(code));
+}
+
+void Parser::read(const char *code) {
+    lexer->load(code);
+}
+
+ptr_expr Parser::read_one_statement() {
+    while (cur_token->kind == k_comment) next();
+    ptr_expr expr;
+
+    switch (cur_token->kind) {
+        default:           expr = handle_general_statement();  break;
+        case kw_class:     expr = handle_class_statement();    break;
+        case kw_while:     expr = handle_while_statement();    break;
+        case kw_if:        expr = handle_if_statement();       break;
+        case k_class_decl: expr = handle_class_decl();         break;
+        case kw_func:      expr = handle_def_func_statement(); break;
+        case kw_def:       expr = handle_def_statement();      break;
+        case k_EOF:        return nullptr;
+        case k_unexpected: return panic_nptr("Parsing Error: Unexpected token "
+                                             "in read_one_statement! Token literal %s\n",
+                                             raw_to_string(cur_token->lexeme).c_str());
+        }
+
+    if (cur_token->kind == k_semi) {
+        panic("Parsing warning: Do not recommend to use semicolon!\n");
+        next();
+    }
+
+    return expr;
 }

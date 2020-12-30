@@ -467,3 +467,7 @@ reg->push_back(func_name,         builtin_println,
                move(func_name_2), builtin_print_func_args,
                "info",            builtin_print_statue);
 ```
+
+## X macro for managing enum value
+
+see include/Kind.def and include/Enum.h

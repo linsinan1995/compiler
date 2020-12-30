@@ -16,6 +16,7 @@
 //
 
 #include "Interpreter/Runtime.h"
+#include "Interpreter/Value.h"
 
 using namespace runtime_ns;
 
@@ -26,6 +27,7 @@ RT_Value::RT_Value(int val) : type(INT), data(val) {};
 // placement new & tagged union for storing mat in union
 RT_Value::RT_Value(Mat val) : type(MATRIX) { new (&data.matrix) Mat(std::move(val)); };
 RT_Value::RT_Value(std::string val) : type(STRING), data(std::move(val)) {};
+RT_Value::RT_Value(Object val) : type(OBJECT) { new (&data.obj) Object(std::move(val)); }
 
 RT_Value RT_Value::operator+(RT_Value rhs) {
     if (is_type<VOID>() || rhs.is_type<VOID>()) {
@@ -401,7 +403,8 @@ bool RT_Value::to_bool() {
     if (is_type<INT>()) return data._int == 0;
     if (is_type<FP>()) return data.fp == 0.;
     if (is_type<MATRIX>()) return data.matrix.data.empty();
-
+    if (is_type<OBJECT>()) return data.obj.member_functions.empty() &&
+                                  data.obj.member_vars.empty();
     panic("Runtime Error : Unexpected RT_Value type!\n");
     return false;
 }
@@ -429,6 +432,9 @@ RT_Value &RT_Value::operator=(RT_Value val) {
         case MATRIX:
             new (&data.matrix) Mat(val.data.matrix);
             break;
+        case OBJECT:
+            new (&data.obj) Object(val.data.obj);
+            break;
     }
     return *this;
 }
@@ -453,6 +459,9 @@ RT_Value::RT_Value(const RT_Value &val) {
         case MATRIX:
             new (&data.matrix) Mat(val.data.matrix);
             break;
+        case OBJECT:
+            new (&data.obj) Object(val.data.obj);
+            break;
     }
 }
 
@@ -475,6 +484,9 @@ RT_Value::RT_Value(RT_Value &&val) noexcept {
             break;
         case STRING:
             data._str = std::move(val.data._str);
+            break;
+        case OBJECT:
+            new (&data.obj) Object(std::move(val.data.obj));
             break;
     }
 }
@@ -501,7 +513,7 @@ void mat_print_helepr(std::ostream &os, const std::vector<float> &data, const st
     os << "\n";
 }
 
-std::ostream &runtime_ns::operator<<(std::ostream &os, const RT_Value &val) {
+std::ostream &operator<<(std::ostream &os, const RT_Value &val) {
     switch (val.type) {
         default:
             return os;
@@ -523,5 +535,37 @@ std::ostream &runtime_ns::operator<<(std::ostream &os, const RT_Value &val) {
             os << "\n";
             mat_print_helepr(os, val.data.matrix.data, val.data.matrix.dim);
             return os;
+        case OBJECT:
+            os << "Class: " << val.data.obj.type_name << "\n";
+            if (val.data.obj.member_vars.empty()) std::cout << "No member variables!\n";
+            else std::cout << "[Member variables]:\n";
+
+            for (auto [var, val] : val.data.obj.member_vars) {
+                std::cout << var << " = " << val << "\n";
+            }
+
+            if (val.data.obj.member_functions.empty()) std::cout << "No member functions!\n";
+            else std::cout << "[Member variables]:\n";
+
+            for (auto [var, val] : val.data.obj.member_functions) {
+                std::cout << var << "\n";
+            }
+            return os;
     }
+}
+
+RT_Value Object::get_variable(const std::string &name) {
+    if (auto var = member_vars.find(name); var != member_vars.end()) {
+        return var->second;
+    }
+
+    return {};
+}
+
+std::shared_ptr<RT_Function> Object::get_function(const std::string &name) {
+    if (auto var = member_functions.find(name); var != member_functions.end()) {
+        return var->second;
+    }
+
+    return nullptr;
 }

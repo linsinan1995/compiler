@@ -57,6 +57,7 @@ void AST_Interpreter::visit_mat(Matrix_AST &expr) {
             mat_helper(dynamic_cast<Matrix_AST&> (inner_mat), data, dims);
         }
     }
+
     Mat mat;
     mat.dim = dims;
     mat.data = data;
@@ -131,7 +132,6 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
     std::shared_ptr<RT_Function> func = rt->get_function(expr.name);
 
     std::vector<RT_Value> v_args;
-
     for (auto &arg : expr.args) {
         arg->accept(*this);
         v_args.push_back(val);
@@ -152,7 +152,7 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
     }
 
     if (func->params_name.size() != expr.args.size()) {
-        panic("Runtime Error : wrong argument number! func %s required %d, but provided %d\n",
+        panic("Runtime Error : Wrong argument number! func %s required %d, but provided %d\n",
               expr.name.c_str(), func->params_name.size(), expr.args.size());
         val = RT_Value();
         return;
@@ -160,11 +160,20 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
 
     rt->creat_context();
     rt->creat_variables(func->params_name, v_args);
+    if (this->is_object_call && m_ptr_obj) {
+        for (auto &[name, mem_var] : m_ptr_obj->member_vars) {
+            rt->creat_variable(name, mem_var);
+        }
+        for (auto &[name, mem_func] : m_ptr_obj->member_functions) {
+            rt->creat_function(name, mem_func);
+        }
+    }
     func->block->accept(*this);
-    func->ret->accept(*this);
+    if (func->ret)
+        func->ret->accept(*this);
+    else reset();
     rt->ruin_context();
 }
-
 
 void AST_Interpreter::visit_func(Function_AST &expr) {
     auto func = std::make_shared<RT_Function>() ;
@@ -210,6 +219,120 @@ void AST_Interpreter::visit_assign(Assign_AST &expr) {
     expr.rhs->accept(*this); // it also assigns value to rt->val
     rt->creat_variable(expr.var->name, val);
     reset();
+}
+
+//struct Object {
+//    std::string type_name;
+//    std::unordered_map<std::string, RT_Value>     member_vars;
+//    std::unordered_map<std::string, RT_Function*> member_functions;
+//};
+void AST_Interpreter::visit_class(Class_AST &expr) {
+    auto entry = std::make_unique<Global_Class_Entry>();
+
+    // functions
+    for (auto & f : expr.funcs) {
+        auto mem_f = std::make_unique<RT_Function> ();
+        for (auto & arg : f->args_with_func_name->args) {
+            mem_f->params_name.push_back(arg->name);
+        }
+        mem_f->block = std::move(f->func_body);
+        mem_f->ret = std::move(f->return_expr);
+        entry->funcs.emplace_back(std::move(f->args_with_func_name->name), std::move(mem_f));
+    }
+
+    // variables
+    for (auto & var : expr.vars) {
+        var->rhs->accept(*this);
+        auto mem_var = std::make_unique<RT_Value> (val);
+        entry->vars.emplace_back(std::move(var->var->name), std::move(val));
+    }
+
+    rt->class_table.insert(expr.type_name, std::move(entry));
+    reset();
+}
+
+void AST_Interpreter::visit_class_decl(Class_Decl_AST &expr) {
+    Global_Class_Entry *entry = rt->class_table.get(expr.class_name);
+
+    Object obj;
+    obj.type_name = expr.var_name;
+
+    entry->dump(&obj);
+
+    rt->creat_variable(expr.var_name, RT_Value(std::move(obj)));
+    reset();
+}
+
+void AST_Interpreter::visit_class_var(Class_Var_AST &expr) {
+    val = rt->get_variable(expr.obj_name);
+    if (val.is_type<VOID>()) {
+        panic("Runtime Error : Object %s has not been defined!\n",
+              expr.obj_name.c_str());
+        reset();
+        return;
+    }
+
+    if (auto res = val.data.obj.get_variable(expr.var_name); !res.is_type<VOID>()) {
+        val = res;
+    } else {
+        panic("Runtime Error : member variable %s in %s has not been defined!\n",
+              expr.var_name.c_str(), expr.obj_name.c_str());
+        reset();
+    }
+}
+
+void AST_Interpreter::visit_class_call(Class_Call_AST &expr) {
+    auto obj = rt->get_variable(expr.obj_name);
+    this->m_ptr_obj = &obj.data.obj;
+    if (obj.is_not_type<OBJECT>()) {
+        panic("Runtime Error : Object %s has not been defined!\n",
+              expr.obj_name.c_str());
+        reset();
+        return;
+    }
+
+    auto func = obj.data.obj.get_function(expr.func_name);
+
+    if (!func) {
+        panic("Runtime Error : function %s in object %s has not been defined!\n",
+              expr.func_name.c_str(), expr.obj_name.c_str());
+        reset();
+        return;
+    }
+
+    std::vector<RT_Value> v_args, obj_args;
+
+
+    for (auto &arg : expr.args) {
+        arg->accept(*this);
+        v_args.push_back(val);
+    }
+
+    if (func->params_name.size() != expr.args.size()) {
+        panic("Runtime Error : Wrong argument number! function %s required %d, but provided %d\n",
+              expr.func_name.c_str(), func->params_name.size(), expr.args.size());
+        reset();
+        return;
+    }
+
+    rt->creat_context();
+    rt->creat_variables(func->params_name, v_args);
+    this->is_object_call = true;
+    for (auto &[name, mem_var] : m_ptr_obj->member_vars) {
+        rt->creat_variable(name, mem_var);
+    }
+    for (auto &[name, mem_func] : m_ptr_obj->member_functions) {
+        rt->creat_function(name, mem_func);
+    }
+    func->block->accept(*this);
+    if (func->ret)
+        func->ret->accept(*this);
+    else {
+        reset();
+    }
+    this->is_object_call = false;
+    this->m_ptr_obj = nullptr;
+    rt->ruin_context();
 }
 
 void AST_Interpreter::evaluate(Expression_AST &expr) {

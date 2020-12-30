@@ -82,6 +82,42 @@ const char *code7 =
         "b = [1,2,3]\n"
         "c = [1,2,3] + b\n";
 
+const char *code8 =
+        "class MyVar {\n"
+        "    inc = 1\n"
+        "    val = 10\n"
+        "\n"
+        "    func inc(x) {\n"
+        "        val = val + 1\n"
+        "    }\n"
+        "\n"
+        "    func get_val() {\n"
+        "        return val\n"
+        "    }\n"
+        "\n"
+        "    func add_val_if_gt_inc(x) {\n"
+        "\n"
+        "        if (x > val) {\n"
+        "            x = x + val\n"
+        "        } else {\n"
+        "            val = val + inc\n"
+        "            inc()    \n"
+        "        }\n"
+        "        return x\n"
+        "    }\n"
+        "}\n"
+        "\n"
+        "MyVar my_var\n"
+        "my_var.get_inc()\n"
+        "\n"
+        "x = 10\n"
+        "\n"
+        "my_var.add_val_if_gt_inc(x)\n"
+        "my_var.add_val_if_gt_inc(x)\n"
+        "my_var.get_val()\n"
+        "my_var.val\n"
+        "";
+
 void driver(std::unique_ptr<Parser> &parser, AST_Printer& visitor) {
     std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
@@ -142,5 +178,9 @@ int main() {
 
     TEST_NAME("matrix")
     parser = Parser::make_parser(code7);
+    driver(parser, printer);
+
+    TEST_NAME("Class")
+    parser = Parser::make_parser(code8);
     driver(parser, printer);
 }

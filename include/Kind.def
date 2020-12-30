@@ -34,7 +34,10 @@
     X(k_rquote),\
     X(k_string),\
     X(k_close_bracket),\
-    X(k_open_bracket)
+    X(k_open_bracket),\
+    X(kw_class),\
+    X(k_class_decl),\
+    X(k_dot)
 
 #define ENUM_STATEMENT_KIND_ENTRY \
     X(k_stmt_if) ,\
@@ -75,4 +78,5 @@
     X(STRING),\
     X(BOOL),\
     X(VOID),\
-    X(MATRIX)
+    X(MATRIX),\
+    X(OBJECT)

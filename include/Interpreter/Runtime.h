@@ -11,92 +11,15 @@
 #include <vector>
 #include <string>
 #include "helper.h"
-
-struct Block_AST;
-struct Expression_AST;
+#include "Symbol_table.h"
 
 namespace runtime_ns {
-    class RT_Value;
-    struct RT_Function;
-    class Context;
-    class Runtime;
-
-    using Value_Type = int;
-
-    struct Mat {
-        std::vector<float> data;
-        std::vector<int> dim;
-    };
-
-    class RT_Value {
-        union VALUE_Data {
-            float       fp{};
-            int         _int;
-            bool        _bool;
-            std::string _str;
-            Mat         matrix;
-            VALUE_Data() {}
-            ~VALUE_Data() {}
-            explicit VALUE_Data(int val) { _int = val; };
-            explicit VALUE_Data(bool val) { _bool = val; };
-            explicit VALUE_Data(float val) { fp = val; }
-            explicit VALUE_Data(std::string val) { _str = std::move(val); };
-        };
-    public:
-        RT_Value() : type(VOID) {};
-        explicit RT_Value(float val);
-        explicit RT_Value(bool val);
-        explicit RT_Value(int val);
-        explicit RT_Value(Mat val);
-        explicit RT_Value(std::string val);
-
-        RT_Value(const RT_Value& val);
-        RT_Value(RT_Value&& val) noexcept ;
-
-        RT_Value &operator=(RT_Value val);
-        RT_Value operator+(RT_Value rhs);
-        RT_Value operator-(RT_Value rhs);
-        RT_Value operator*(RT_Value rhs);
-        RT_Value operator/(RT_Value rhs);
-        RT_Value operator%(RT_Value rhs);
-        RT_Value operator>(RT_Value rhs);
-        RT_Value operator<(RT_Value rhs);
-        RT_Value operator==(RT_Value rhs);
-        RT_Value operator>=(RT_Value rhs);
-        RT_Value operator<=(RT_Value rhs);
-        RT_Value operator^(RT_Value rhs);
-
-        friend std::ostream& operator<<(std::ostream &os, const RT_Value &val);
-    public:
-        Value_Type  type;
-        VALUE_Data  data;
-        bool to_bool();
-
-        template <int _Value_Type>
-        inline bool is_type() {
-            return this->type == _Value_Type;
-        }
-
-        template <int _Value_Type>
-        inline bool is_not_type() {
-            return this->type != _Value_Type;
-        }
-    };
-
-    struct RT_Function {
-        std::vector<std::string>        params_name;
-        std::vector<RT_Value>           params;
-        std::shared_ptr<Block_AST>      block;
-        std::shared_ptr<Expression_AST> ret;
-    };
-
-
     class Context {
     public:
         bool         has_variable(const std::string&);
         RT_Value     get_variable(const std::string&);
         void         creat_variable(const std::string&, RT_Value);
-        void         creat_variables(std::vector<std::string>, std::vector<RT_Value>);
+        void         creat_variables(const std::vector<std::string>&, std::vector<RT_Value>);
 
         bool         has_function(const std::string& name);
         void         creat_function(const std::string& name, std::shared_ptr<RT_Function> f);
@@ -104,17 +27,16 @@ namespace runtime_ns {
 
     public:
         // store variables & functions
-        std::unordered_map<std::string, RT_Value>     vars;
-        std::unordered_map<std::string, std::shared_ptr<RT_Function> > funcs;
+        Symbol_Table sym_table {};
     };
 
     class Runtime {
     public:
-        using builtin_func_t = RT_Value (*)(Runtime*, std::vector<RT_Value>);
+        using builtin_func_t = RT_Value (*) (Runtime*, std::vector<RT_Value>);
 
         RT_Value       get_variable(const std::string&);
         void           creat_variable(const std::string&, RT_Value);
-        void           creat_variables(std::vector<std::string>, std::vector<RT_Value>);
+        void           creat_variables(const std::vector<std::string>&, std::vector<RT_Value>);
 
         std::shared_ptr<RT_Function> get_function(const std::string& name);
         void           creat_function(const std::string& name, std::shared_ptr<RT_Function> f);
@@ -128,6 +50,7 @@ namespace runtime_ns {
         static std::shared_ptr<Runtime> make_runtime();
         void register_builtin_func(const std::string& name, builtin_func_t func_ptr);
     public:
+        Global_Class_Table class_table;
         std::vector<std::unique_ptr<Context>> contexts;
         std::unordered_map<std::string, builtin_func_t> builtin_func;
     };

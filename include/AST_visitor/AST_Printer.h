@@ -34,6 +34,10 @@ public:
     void visit_if(If_AST                     &) override ;
     void visit_while(While_AST               &) override ;
     void visit_unary(Unary_expr_AST          &) override ;
+    void visit_class(Class_AST               &) override ;
+    void visit_class_decl(Class_Decl_AST     &) override ;
+    void visit_class_call(Class_Call_AST     &) override ;
+    void visit_class_var(Class_Var_AST       &) override ;
     bool no_info = false;
 };
 

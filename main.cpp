@@ -29,7 +29,7 @@ void main_loop(std::unique_ptr<Parser> &parser) {
         std::cout << ">> ";
         std::getline(std::cin >> std::ws, code);
         if (code == "QUIT") return ;
-        parser->read_RT(code.c_str());
+        parser->read(code.c_str());
         driver(parser);
     } while (1);
 }
@@ -68,7 +68,7 @@ void main_loop_interpreter(std::unique_ptr<Parser> &parser) {
     do {
         std::cout << ">> ";
         std::getline(std::cin >> std::ws, code);
-        parser->read_RT(code.c_str());
+        parser->read(code.c_str());
         std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
 
         if (v.empty()) return ;

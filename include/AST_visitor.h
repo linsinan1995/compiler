@@ -23,6 +23,10 @@ struct Function_proto_AST;
 struct Unary_expr_AST;
 struct Integer_AST;
 struct Matrix_AST;
+struct Class_AST;
+struct Class_Decl_AST;
+struct Class_Call_AST;
+struct Class_Var_AST;
 
 class AST_Visitor {
 public:
@@ -43,6 +47,10 @@ public:
     virtual void visit_if(If_AST                     &) = 0;
     virtual void visit_while(While_AST               &) = 0;
     virtual void visit_unary(Unary_expr_AST          &) = 0;
+    virtual void visit_class(Class_AST               &) = 0;
+    virtual void visit_class_decl(Class_Decl_AST     &) = 0;
+    virtual void visit_class_call(Class_Call_AST     &) = 0;
+    virtual void visit_class_var(Class_Var_AST       &) = 0;
 };
 
 

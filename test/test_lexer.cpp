@@ -58,6 +58,42 @@ const char *code5 =
 const char *code6 =
         "mat = [[1,2,3], [2,3,4], [5,6,7]]";
 
+const char *code7 = 
+        "class MyVar {\n"
+        "    inc = 1;\n"
+        "    val = 10;\n"
+        "\n"
+        "    func inc(x) {\n"
+        "        val = val + 1\n"
+        "    }\n"
+        "\n"
+        "    func get_val() {\n"
+        "        return val\n"
+        "    }\n"
+        "\n"
+        "    func add_val_if_gt_inc(x) {\n"
+        "\n"
+        "        if (x > val) {\n"
+        "            x = x + val\n"
+        "        } else {\n"
+        "            val = val + inc\n"
+        "            inc()    \n"
+        "        }\n"
+        "        return x;\n"
+        "    }\n"
+        "}\n"
+        "\n"
+        "MyVar my_var\n"
+        "my_var.get_inc()\n"
+        "\n"
+        "x = 10\n"
+        "\n"
+        "my_var.add_val_if_gt_inc(x)\n"
+        "my_var.add_val_if_gt_inc(x)\n"
+        "my_var.get_val()\n"
+        "my_var.val\n"
+        "";
+
 void main_loop(std::unique_ptr<Lexer>& lex) {
     std::unique_ptr<Token> token = nullptr;
 
@@ -98,5 +134,9 @@ int main() {
 
     TEST_NAME("matrix")
     lex->load(code6);
+    main_loop(lex);
+    
+    TEST_NAME("class")
+    lex->load(code7);
     main_loop(lex);
 }

@@ -32,3 +32,7 @@ inline void If_AST::accept(AST_Visitor &visitor) { visitor.visit_if(*this); }
 inline void While_AST::accept(AST_Visitor &visitor) { visitor.visit_while(*this); }
 inline void Function_call_AST::accept(AST_Visitor &visitor) { visitor.visit_func_call(*this); }
 inline void Function_AST::accept(AST_Visitor &visitor) { visitor.visit_func(*this); }
+inline void Class_AST::accept(AST_Visitor &visitor) { visitor.visit_class(*this); }
+inline void Class_Decl_AST::accept(AST_Visitor &visitor) { visitor.visit_class_decl(*this); }
+inline void Class_Call_AST::accept(AST_Visitor &visitor) { visitor.visit_class_call(*this); }
+inline void Class_Var_AST::accept(AST_Visitor &visitor) { visitor.visit_class_var(*this); }

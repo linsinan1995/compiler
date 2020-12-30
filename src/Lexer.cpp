@@ -86,6 +86,7 @@ void Lexer::identifier(Token* token) {
     }
 
     check_keyword(token);
+    check_costumized_class_decl(token);
 }
 
 void Lexer::number(Token* token) {
@@ -169,4 +170,129 @@ void Lexer::string(Token *token) {
 
     // eat right quote
     eat();
+}
+
+void Lexer::check_costumized_class_decl(Token *tok) {
+    if (registered_class.find(raw_to_string(tok->lexeme)) !=
+        registered_class.end()) {
+        tok->kind = k_class_decl;
+    }
+}
+
+void Lexer::register_class(Token *tok) {
+    registered_class.insert(raw_to_string(tok->lexeme));
+}
+
+bool Lexer::is_uni_operator(Token *token, char op) {
+    switch (op) {
+        case '.': token->kind = k_dot;           return true;
+        case '(': token->kind = k_open_paren;    return true;
+        case ')': token->kind = k_close_paren;   return true;
+        case '+': token->kind = op_add;          return true;
+        case '{': token->kind = k_open_curly;    return true;
+        case '}': token->kind = k_close_curly;   return true;
+        case '/': token->kind = op_div;          return true;
+        case '*': token->kind = op_mul;          return true;
+        case '%': token->kind = op_mod;          return true;
+        case ';': token->kind = k_semi;          return true;
+        case '^': token->kind = op_pow;          return true;
+        case ',': token->kind = k_comma;         return true;
+        case '-': token->kind = op_sub;          return true;
+        case '[': token->kind = k_open_bracket;  return true;
+        case ']': token->kind = k_close_bracket; return true;
+        default: return false;
+    }
+}
+
+bool Lexer::is_ambigious_operator(Token *token, char c) {
+    switch (c) {
+        case '>': token->kind = op_gt;     return true;
+        case '<': token->kind = op_lt;     return true;
+        case '=': token->kind = op_assign; return true;
+        default: return false;
+    }
+}
+
+inline
+bool Lexer::is_white_space(char c) {
+    return anyone(c, ' ', '\t', '\r', '\n');
+}
+
+inline
+bool Lexer::is_identifier_prefix(char c) {
+    return isalpha(c) || c == '_';
+}
+
+void Lexer::check_keyword(Token *tok) {
+    if (tok->lexeme.len == 1) {
+        if (tok->lexeme.content[0] == '=')
+            tok->kind = op_assign;
+        else return;
+    } else if (tok->lexeme.len == 2) {
+        if (tok->lexeme.content[0] == '=' &&
+            tok->lexeme.content[1] == '=') tok->kind = op_equal;
+        else if (tok->lexeme.content[0] == 'i' &&
+                 tok->lexeme.content[1] == 'f') tok->kind = kw_if;
+    } else if (tok->lexeme.len == 3) {
+        if (tok->lexeme.content[0] == 'v' &&
+            tok->lexeme.content[1] == 'a' &&
+            tok->lexeme.content[2] == 'r') tok->kind = kw_def;
+    } else if (tok->lexeme.len == 4) {
+        if (tok->lexeme.content[0] == 'f' &&
+            tok->lexeme.content[1] == 'u' &&
+            tok->lexeme.content[2] == 'n' &&
+            tok->lexeme.content[3] == 'c') tok->kind = kw_func;
+        else if (tok->lexeme.content[0] == 'e' &&
+                 tok->lexeme.content[1] == 'l' &&
+                 tok->lexeme.content[2] == 's' &&
+                 tok->lexeme.content[3] == 'e') tok->kind = kw_else;
+    } else if (tok->lexeme.len == 5) {
+        if (tok->lexeme.content[0] == 'w' &&
+            tok->lexeme.content[1] == 'h' &&
+            tok->lexeme.content[2] == 'i' &&
+            tok->lexeme.content[3] == 'l' &&
+            tok->lexeme.content[4] == 'e') tok->kind = kw_while;
+        else if (tok->lexeme.content[0] == 'c' &&
+                 tok->lexeme.content[1] == 'l' &&
+                 tok->lexeme.content[2] == 'a' &&
+                 tok->lexeme.content[3] == 's' &&
+                 tok->lexeme.content[4] == 's') tok->kind = kw_class;
+    } else if (tok->lexeme.len == 6) {
+        if (tok->lexeme.content[0] == 'r' &&
+            tok->lexeme.content[1] == 'e' &&
+            tok->lexeme.content[2] == 't' &&
+            tok->lexeme.content[3] == 'u' &&
+            tok->lexeme.content[4] == 'r' &&
+            tok->lexeme.content[5] == 'n') tok->kind = kw_return;
+    }
+}
+
+inline
+bool Lexer::is_left_quote(char c) {
+    return c == '\"';
+}
+
+inline
+bool Lexer::is_comment(char c) {
+    return c == '#';
+}
+
+inline
+bool Lexer::is_valid_identifier(char c) {
+    return isalnum(c) || c == '_';
+}
+
+inline
+bool Lexer::is_eof(char c) {
+    return c == '\0';
+}
+
+inline
+bool Lexer::is_digit(char c) {
+    return isdigit(c);
+}
+
+bool Lexer::is_op(Kind k) {
+    return anyone(k, op_add, op_sub, op_mul, op_div, op_lt, op_equal,
+                  op_le, op_ge, op_gt, op_mod, op_pow);
 }

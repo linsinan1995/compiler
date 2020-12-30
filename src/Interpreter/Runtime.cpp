@@ -6,6 +6,12 @@
 
 #include <utility>
 
+#include <utility>
+
+#include <utility>
+
+#include <utility>
+
 /******************************************************************* 
  * 
  *    @Time           @Author       @Description
@@ -29,46 +35,39 @@ using namespace runtime_ns;
 using ptr_value = std::unique_ptr<RT_Value>;
 
 void Context::creat_variable(const std::string& id_name, RT_Value val) {
-    vars[id_name] = std::move(val);
+    sym_table.insert(id_name, std::move(val));
 }
 
-void Context::creat_variables(std::vector<std::string> id_names, std::vector<RT_Value> vals) {
+void Context::creat_variables(const std::vector<std::string> &id_names, std::vector<RT_Value> vals) {
     for (int i = 0; i < id_names.size(); i++) {
-        vars.emplace(std::move(id_names[i]), std::move(vals[i]));
+        sym_table.insert(id_names[i], vals[i]);
     }
 }
 
 RT_Value Context::get_variable(const std::string &id_name) {
-    if (auto res = vars.find(id_name); res != vars.end()) {
-        return res->second;
-    }
-
-    panic("Variable %s not found!\n", id_name.c_str());
-    return RT_Value();
+    return sym_table.get_variable(id_name);
 }
 
 bool Context::has_variable(const std::string& id_name) {
-    return vars.find(id_name) != vars.end();
+    return sym_table.get_variable(id_name).is_type<VOID>();
 }
 
 void Context::creat_function(const std::string& name, std::shared_ptr<RT_Function> f) {
-    funcs.insert({name, f});
+    sym_table.insert(name, std::move(f));
 }
 
 bool Context::has_function(const std::string& name) {
-    return funcs.find(name) != funcs.end();
+    return sym_table.get_function(name) == nullptr;
 }
 
 std::shared_ptr<RT_Function> Context::get_function(const std::string& name) {
-    if (auto res = funcs.find(name); res != funcs.end()) {
-        return res->second;
-    }
-    return nullptr;
+    return sym_table.get_function(name);
 }
 
 void Runtime::creat_function(const std::string& name, std::shared_ptr<RT_Function> f) {
     contexts.back()->creat_function(name, std::move(f));
 }
+
 
 Runtime::builtin_func_t Runtime::get_builtin_function(const std::string& name) {
     return builtin_func[name];
@@ -79,11 +78,13 @@ std::shared_ptr<RT_Function> Runtime::get_function(const std::string &name) {
         return nullptr;
     }
 
-    return contexts.back()->get_function(name);
+    auto f = contexts.back()->get_function(name);
+    return f == nullptr ? panic_nptr("Function %s not found!\n", name.c_str()) :
+                          f;
 }
 
-void Runtime::creat_variable(const std::string& name, RT_Value rt) {
-    contexts.back()->creat_variable(name, std::move(rt));
+void Runtime::creat_variable(const std::string& name, RT_Value val) {
+    contexts.back()->creat_variable(name, std::move(val));
 }
 
 RT_Value Runtime::get_variable(const std::string &name) {
@@ -98,8 +99,8 @@ void Runtime::ruin_context() {
     contexts.pop_back();
 }
 
-void Runtime::creat_variables(std::vector<std::string> id_names, std::vector<RT_Value> vals) {
-    contexts.back()->creat_variables(std::move(id_names), std::move(vals));
+void Runtime::creat_variables(const std::vector<std::string> &id_names, std::vector<RT_Value> vals) {
+    contexts.back()->creat_variables(id_names, std::move(vals));
 }
 
 std::shared_ptr<Runtime> Runtime::make_runtime() {

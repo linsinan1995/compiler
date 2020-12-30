@@ -94,6 +94,43 @@ const char *code7 =
         "var b = [[1,2],[3,4],[5,6]]\n"
         "c = mat(a,b)";
 
+const char *code8 =
+        "class MyVar {\n"
+        "    inc = 1\n"
+        "    val = 10\n"
+        "\n"
+        "    func inc() {\n"
+        "        val = val + 1\n"
+        "    }\n"
+        "\n"
+        "    func get_val() {\n"
+        "        return val\n"
+        "    }\n"
+        "\n"
+        "    func add_val_if_gt_inc(x) {\n"
+        "\n"
+        "        if (x > val) {\n"
+        "            x = x + val\n"
+        "        } else {\n"
+        "            val = val + inc\n"
+        "            inc()    \n"
+        "        }\n"
+        "        return x\n"
+        "    }\n"
+        "}\n"
+        "\n"
+        "MyVar my_var\n"
+        "my_var.get_inc()\n"
+        "\n"
+        "x = 10\n"
+        "\n"
+        "my_var.add_val_if_gt_inc(x)\n"
+        "my_var.add_val_if_gt_inc(x)\n"
+        "my_var.get_val()\n"
+        "my_var.val\n"
+        "";
+
+
 struct builtin_register {
     std::vector<std::pair<std::string, Runtime::builtin_func_t>> funcs;
 
@@ -138,32 +175,36 @@ RT_Value builtin_println(Runtime* rt, const std::vector<RT_Value>& args) {
 int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
     AST_Interpreter interpreter {};
+//
+//    TEST_NAME("simple def")
+//    driver(parser, interpreter);
+//
+//    TEST_NAME("func def & call")
+//    parser = Parser::make_parser(code2);
+//    driver(parser, interpreter);
+//
+//    TEST_NAME("if block")
+//    parser = Parser::make_parser(code3);
+//    driver(parser, interpreter);
+//
+//    TEST_NAME("while block")
+//    parser = Parser::make_parser(code4);
+//    driver(parser, interpreter);
+//
+//    TEST_NAME("Read me")
+//    parser = Parser::make_parser(code5);
+//    driver(parser, interpreter);
+//
+//    TEST_NAME("Bug in operator>")
+//    parser = Parser::make_parser(code6);
+//    driver(parser, interpreter);
+//
+//    TEST_NAME("matrix")
+//    parser = Parser::make_parser(code7);
+//    driver(parser, interpreter);
 
-    TEST_NAME("simple def")
-    driver(parser, interpreter);
-
-    TEST_NAME("func def & call")
-    parser = Parser::make_parser(code2);
-    driver(parser, interpreter);
-
-    TEST_NAME("if block")
-    parser = Parser::make_parser(code3);
-    driver(parser, interpreter);
-
-    TEST_NAME("while block")
-    parser = Parser::make_parser(code4);
-    driver(parser, interpreter);
-
-    TEST_NAME("Read me")
-    parser = Parser::make_parser(code5);
-    driver(parser, interpreter);
-
-    TEST_NAME("Bug in operator>")
-    parser = Parser::make_parser(code6);
-    driver(parser, interpreter);
-
-    TEST_NAME("matrix")
-    parser = Parser::make_parser(code7);
+    TEST_NAME("Class")
+    parser = Parser::make_parser(code8);
     driver(parser, interpreter);
 }
 

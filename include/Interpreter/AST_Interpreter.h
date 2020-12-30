@@ -11,7 +11,9 @@
 class AST_Interpreter : public AST_Visitor {
 public:
     std::shared_ptr<runtime_ns::Runtime> rt;
-    runtime_ns::RT_Value val;
+    bool is_object_call = false;
+    Object *m_ptr_obj = nullptr;
+    RT_Value val;
     void reset();
     void evaluate(Expression_AST &) override ;
 
@@ -30,11 +32,16 @@ public:
     void visit_unary(Unary_expr_AST          &) override ;
     void visit_str(STR_AST                   &) override ;
     void visit_mat(Matrix_AST                &) override ;
+    void visit_class(Class_AST               &) override ;
+    void visit_class_decl(Class_Decl_AST     &) override ;
+    void visit_class_var(Class_Var_AST       &) override ;
+    void visit_class_call(Class_Call_AST     &) override ;
 
-    void mat_helper(Matrix_AST &expr, std::vector<float>&, std::vector<int>&);
+    void mat_helper(Matrix_AST &, std::vector<float>&, std::vector<int>&);
     bool is_null() { return val.is_type<VOID>(); }
+
     AST_Interpreter() : rt(runtime_ns::Runtime::make_runtime()),
-                        val(runtime_ns::RT_Value())
+                        val(RT_Value())
     {}
 };
 

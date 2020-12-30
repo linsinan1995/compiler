@@ -21,18 +21,19 @@ class Parser {
     void consume(Kind, const std::string &);
     void next();
     char peek();
-public:
+
     std::unique_ptr<Token> cur_token;
     std::unique_ptr<Token> prev_tok;
     std::unique_ptr<Lexer> lexer;
-public:
-    v_expr_ptr  parse();
-    ptr_expr    read_one_statement();
-public:
-    ptr_expr            handle_def_statement();
-    ptr_expr            handle_def_func_statement();
+
+    ptr_expr            read_one_statement();
+
+    ptr_Define_AST      handle_def_statement();
+    ptr_Function_AST    handle_def_func_statement();
     ptr_expr            handle_if_statement();
-    ptr_expr            handle_statement();
+    ptr_expr            handle_general_statement();
+    ptr_expr            handle_class_statement();
+    ptr_expr            handle_class_decl();
 
     ptr_expr                parse_atom();
     ptr_expr                parse_expr(int prev_prec = 0);
@@ -48,13 +49,13 @@ public:
     v_expr_ptr              parse_func_call_expr();
     ptr_Function_proto_AST  parse_func_proto();
     ptr_Function_AST        parse_def_func_expr(ptr_Function_proto_AST);
+    ptr_expr                parse_neg_number_expr();
+    ptr_expr                parse_matrix_expr();
 public:
-    void read_RT(const char *code);
+    v_expr_ptr  parse();
+    void read(const char *code);
     explicit Parser(std::unique_ptr<Lexer>);
-    static std::unique_ptr<Parser> make_parser(const char *code);
-
-    ptr_expr parse_neg_number_expr();
-    ptr_expr parse_matrix_expr();
+    static std::unique_ptr<Parser> make_parser(const char*);
 };
 
 

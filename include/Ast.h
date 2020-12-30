@@ -42,6 +42,9 @@ using ptr_If_AST             = std::shared_ptr<If_AST>;
 using ptr_While_AST          = std::shared_ptr<While_AST>;
 using ptr_Unary_expr_AST     = std::shared_ptr<Unary_expr_AST>;
 using ptr_STR_AST            = std::shared_ptr<STR_AST>;
+using ptr_Class_AST          = std::shared_ptr<Class_AST>;
+using ptr_Class_Call_AST     = std::shared_ptr<Class_Call_AST>;
+using ptr_Class_Var_AST      = std::shared_ptr<Class_Var_AST>;
 
 struct Expression_AST {
     virtual ~Expression_AST() = default;
@@ -156,4 +159,32 @@ struct While_AST: public Expression_AST  {
     void accept(AST_Visitor &visitor) override;
 };
 
+struct Class_AST: public Expression_AST  {
+    std::string type_name;
+    std::vector<ptr_Assign_AST>   vars;
+    std::vector<ptr_Function_AST> funcs;
+
+    void accept(AST_Visitor &visitor) override;
+};
+
+struct Class_Decl_AST: public Expression_AST  {
+    std::string class_name;
+    std::string var_name;
+
+    void accept(AST_Visitor &visitor) override;
+};
+
+struct Class_Call_AST: public Expression_AST  {
+    std::string                     obj_name;
+    std::string                     func_name;
+    std::vector<ptr_Expression_AST> args;
+
+    void accept(AST_Visitor &visitor) override;
+};
+
+struct Class_Var_AST: public Expression_AST {
+    std::string  obj_name;
+    std::string  var_name;
+    void accept(AST_Visitor &visitor) override;
+};
 #endif //COMPILER_EXPRESSION_H

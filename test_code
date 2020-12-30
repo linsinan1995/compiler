@@ -23,3 +23,38 @@ func f2(a, b) { if (a > b) { c = a+b } else { c = 0 } return c } # branching
 f2(f(1,2),1)
 func f(c,d) { return 1 } # function overwrite
 info() # customized built-in function
+
+class MyVar {
+    inc = 1;
+    val = 10;
+
+    func inc(x) {
+        val = val + 1
+    }
+
+    func get_val() {
+        return val
+    }
+
+    func add_val_if_gt_inc(x) {
+
+        if (x > val) {
+            x = x + val
+        } else {
+            val = val + inc
+            inc()
+        }
+        return x;
+    }
+}
+
+MyVar my_var
+my_var.get_inc()
+
+x = 10
+
+my_var.add_val_if_gt_inc(x)
+my_var.add_val_if_gt_inc(x+10)
+my_var.get_val()
+my_var.val
+
