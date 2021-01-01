@@ -14,15 +14,15 @@ namespace built_in_function {
     using namespace runtime_ns;
 
     // built in function
-    RT_Value builtin_println(Runtime* rt, std::vector<RT_Value> args) {
+    RT_Value builtin_println(Runtime* rt, std::vector<RT_Value*> args) {
         for (const auto& arg : args) {
-            std::cout << arg << "\n";
+            std::cout << *arg << "\n";
         }
         if (args.empty()) std::cout << "\n";
         return RT_Value();
     }
 
-    RT_Value builtin_print_func_args(Runtime* rt, std::vector<RT_Value> args) {
+    RT_Value builtin_print_func_args(Runtime* rt, std::vector<RT_Value*> args) {
         if (args.size() != 1) {
             return panic_type<RT_Value>("Runtime Error: Wrong argument number in "
                                         "builtin_print_func_args! It required 1 but got %d\n",
@@ -31,13 +31,13 @@ namespace built_in_function {
 
         auto func_name = args[0];
 
-        if (func_name.is_not_type<STRING>()) {
+        if (func_name->is_not_type<STRING>()) {
             return panic_type<RT_Value>("Runtime Error: Wrong argument type in "
                                         "builtin_print_func_args! It required string but got %s "
-                                        "arguments\n", names_rt_val_kind[func_name.type]);
+                                        "arguments\n", names_rt_val_kind[func_name->type]);
         }
 
-        auto func = rt->get_function(args[0].data._str);
+        auto func = rt->get_function(args[0]->data._str);
 
         if (!func) {
             return panic_type<RT_Value>("Runtime Error: Wrong function name in "
@@ -45,7 +45,7 @@ namespace built_in_function {
                                         "all defined functions\n");
         }
 
-        std::cout << "[func]: " << func_name << "\n";
+        std::cout << "[func]: " << *func_name << "\n";
         std::cout << "  [args]: ";
         for (auto &arg : func->params_name) {
             std::cout << arg << " ";
@@ -54,7 +54,7 @@ namespace built_in_function {
         return {};
     }
 
-    RT_Value builtin_print_statue(Runtime* rt, std::vector<RT_Value> args) {
+    RT_Value builtin_print_statue(Runtime* rt, std::vector<RT_Value*> args) {
         if (!args.empty()) {
             return panic_type<RT_Value>("Runtime Error: Wrong argument number in "
                                         "builtin_print_statue! It required 0 but got %d "
@@ -62,14 +62,15 @@ namespace built_in_function {
         }
 
         std::cout << "\n==========STATUE==========\n";
-        std::cout << "[context level]: " << rt->contexts.size() << "\n";
+        std::cout << "[context level]: " << rt->sym_table.size() << "\n";
         std::cout << "[local vars]: \n";
-        for (auto &[var, val] : rt->contexts.back()->vars) {
+        for (auto &[var, val] : rt->sym_table.back().vars) {
             std::cout << var << " : " << val << "\n";
         }
 
-        for (auto &[name, func] : rt->contexts.back()->funcs) {
-            builtin_print_func_args(rt, { RT_Value(name) });
+        for (auto &[name, func] : rt->sym_table.back().funcs) {
+            auto rt_str_name = RT_Value(name);
+            builtin_print_func_args(rt, { &rt_str_name });
         }
         std::cout << "==========================\n";
         return {};

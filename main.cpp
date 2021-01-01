@@ -13,7 +13,7 @@ using namespace register_ns;
 
 void driver(std::unique_ptr<Parser> &parser) {
     AST_Printer printer {};
-    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
@@ -69,17 +69,17 @@ void main_loop_interpreter(std::unique_ptr<Parser> &parser) {
         std::cout << ">> ";
         std::getline(std::cin >> std::ws, code);
         parser->read(code.c_str());
-        std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
+        std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
 
         if (v.empty()) return ;
 
         for (auto &expr : v) {
             interpreter.evaluate(*expr);
             if (!interpreter.is_null()) {
-                std::cout << interpreter.val << "\n";
+                std::cout << *(interpreter.val) << "\n";
             }
         }
-    } while (1);
+    } while (true);
 }
 
 int main() {

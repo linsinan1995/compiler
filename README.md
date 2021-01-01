@@ -29,16 +29,20 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
     - Interpreter
     - AoT compilation
         - codegen (partial)
-  - Code reorganize
+  - Code re-organize
     - Visitor pattern for AST
+  - Symbol table & global class table
   - Data type
     - matrix
     - fp
     - string
-  - Built-in functions register
+    - customized class
+  - Built-in functions
+  - Memory management
+    - memory pool
 
 - To do
-  - Error handling
+  - Better error handling
   - MLIR IR emitter
   - Code Gen
     - control flow
@@ -47,8 +51,11 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   - Rich data type
     - indexing
   - code redesign
+    - better scoping
     - performance bottleneck (llvm::StringRef, llvm::cl ... )
-
+  - Memory management
+    - better garbage collection
+    - better memory layout for RT_Value
 
 # Lexing
 

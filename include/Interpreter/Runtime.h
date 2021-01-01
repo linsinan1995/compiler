@@ -34,7 +34,7 @@ namespace runtime_ns {
 
     class Runtime {
     public:
-        using builtin_func_t = RT_Value* (*) (Runtime*, std::vector<RT_Value*>);
+        using builtin_func_t = RT_Value (*) (Runtime*, std::vector<RT_Value*>);
 
         RT_Value* get_variable(const std::string&);
 

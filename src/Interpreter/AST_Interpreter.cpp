@@ -169,7 +169,7 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
         }
 
         reset();
-        val = f(rt.get(), v_args);
+        val = rt->allocator->alloc_var(std::move(f(rt.get(), v_args)));
         return;
     }
 

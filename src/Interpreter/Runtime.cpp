@@ -96,12 +96,6 @@ void Runtime::creat_variables(const std::vector<std::string> &id_names, std::vec
     }
 }
 
-//void Runtime::copy_variables(const std::vector<std::string> &id_names, std::vector<RT_Value*> vals) {
-//    for (int i = 0; i < id_names.size(); i++) {
-//        creat_variable(id_names[i], vals[i]);
-//    }
-//}
-
 std::unique_ptr<Runtime> Runtime::make_runtime() {
     auto rt = std::make_unique<Runtime>();
     rt->creat_call_frame();
