@@ -11,8 +11,10 @@
 #include "Value.h"
 #include "Enum.h"
 
+using str_value_list    = std::vector<std::pair<std::string, RT_Value*>>;
+using str_ptr_func_list = std::vector<std::pair<std::string, RT_Function*>>;
+
 struct Symbol_Table {
-//    void remove(const std::string &);
     void insert(const std::string &, RT_Value*);
     void insert(const std::string &, RT_Function*);
     RT_Function* get_function(const std::string &);
@@ -21,9 +23,6 @@ struct Symbol_Table {
     std::unordered_map<std::string, RT_Value*> vars {};
     std::unordered_map<std::string, RT_Function*> funcs {};
 };
-
-using str_value_list    = std::vector<std::pair<std::string, RT_Value*>>;
-using str_ptr_func_list = std::vector<std::pair<std::string, RT_Function*>>;
 
 struct Global_Class_Entry {
     str_value_list    vars;

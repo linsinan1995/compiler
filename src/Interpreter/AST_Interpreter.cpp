@@ -197,10 +197,6 @@ void AST_Interpreter::visit_func(Function_AST &expr) {
 
     func->block = std::move(expr.func_body);
     func->ret = std::move(expr.return_expr);
-//    std::exchange(expr.func_body, nullptr);
-//    std::exchange(expr.return_expr, nullptr);
-    expr.return_expr = nullptr;
-    expr.func_body = nullptr;
 
     rt->creat_function(expr.args_with_func_name->name, func);
     expr.args_with_func_name = nullptr;

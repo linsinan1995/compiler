@@ -21,8 +21,6 @@ using namespace runtime_ns;
 using ptr_value = std::unique_ptr<RT_Value>;
 
 void Runtime::creat_function(const std::string& name, RT_Function* f) {
-    f->occupied = true;
-
     if (auto entry = sym_table.back().funcs.find(name); entry != sym_table.back().funcs.end()) {
         allocator->dealloc_func(entry->second);
     }
@@ -85,6 +83,8 @@ void Runtime::creat_call_frame() {
 }
 
 void Runtime::destroy_call_frame() {
+    // todo:
+    //      garbage collections & memory check
     sym_table.pop_back();
 }
 
@@ -92,7 +92,7 @@ void Runtime::creat_variables(const std::vector<std::string> &id_names, std::vec
     for (int i = 0; i < id_names.size(); i++) {
         // copy to instead of move
         // allocator->alloc_var(vals[i]) will copy a pointer to invoke RT_Value(bool)
-        creat_variable(id_names[i], allocator->alloc_var(*vals[i]));
+        creat_variable(id_names[i], vals[i]);
     }
 }
 
@@ -108,5 +108,19 @@ void Runtime::register_builtin_func(const std::string& name, builtin_func_t func
 
 void Runtime::clear() {
     builtin_func.clear();
+}
+
+void Runtime::creat_variable(const std::string &name, RT_Value *ptr_val) {
+    if (!ptr_val) ptr_val = allocator->alloc_var();
+    else          ptr_val = allocator->alloc_var(*ptr_val);
+
+    ptr_val->occupied = true;
+
+    // Replace & deallocate previous value
+    if (auto entry = sym_table.back().vars.find(name); entry != sym_table.back().vars.end()) {
+        allocator->dealloc_var(entry->second);
+    }
+
+    sym_table.back().insert(name, ptr_val);
 }
 

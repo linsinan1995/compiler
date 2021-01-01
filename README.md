@@ -27,11 +27,13 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
     - Precedence
   - Execution
     - Interpreter
+        - symbol table & global class table
+        - customized class / reload-able class
+        - control flow
     - AoT compilation
         - codegen (partial)
   - Code re-organize
     - Visitor pattern for AST
-  - Symbol table & global class table
   - Data type
     - matrix
     - fp
@@ -39,7 +41,7 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
     - customized class
   - Built-in functions
   - Memory management
-    - memory pool
+    - memory pool with memory alignment
 
 - To do
   - Better error handling
@@ -53,9 +55,13 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   - code redesign
     - better scoping
     - performance bottleneck (llvm::StringRef, llvm::cl ... )
+    - static switch/ magic switch
+    - better solution for handling intermediate result
+    - better Matrix class design -> cv::Mat
   - Memory management
     - better garbage collection
     - better memory layout for RT_Value
+  - Benchmarking
 
 # Lexing
 

@@ -36,7 +36,7 @@ add_library(
     Lexer.cpp
     Interpreter/Runtime.cpp
     Interpreter/AST_Interpreter.cpp
-    Interpreter/Symbol_table.cpp
+        Interpreter/Symbol_table.cpp
     Interpreter/Value.cpp
     Ast.cpp
     Parser.cpp

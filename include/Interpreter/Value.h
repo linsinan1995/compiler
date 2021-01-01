@@ -21,17 +21,17 @@ using ptr_obj = std::shared_ptr<Object>;
 
 struct Mat {
     std::vector<float> data;
-    std::vector<int> dim;
+    std::vector<int>   dim;
 };
 
 struct Object {
     std::string type_name;
-    RT_Function* get_function(const std::string &);
-    RT_Value* get_variable(const std::string &);
+    RT_Function* get_function(const std::string&);
+    RT_Value*    get_variable(const std::string&);
 
     std::unordered_map<std::string, RT_Value*>     member_vars {};
-    std::unordered_map<std::string, RT_Function*>  member_functions {}; // weak_ptr
-    void update_variable(const std::string &name, RT_Value *ptr_value);
+    std::unordered_map<std::string, RT_Function*>  member_functions {};
+    void update_variable(const std::string&, RT_Value*);
 };
 
 class RT_Value {
@@ -44,23 +44,24 @@ class RT_Value {
         Object      obj;
         VALUE_Data() {}
         ~VALUE_Data() {}
-        explicit VALUE_Data(int val) { _int = val; };
-        explicit VALUE_Data(bool val) { _bool = val; };
-        explicit VALUE_Data(float val) { fp = val; }
-        explicit VALUE_Data(std::string val) { _str = std::move(val); };
-        explicit VALUE_Data(Object val) { obj = std::move(val); };
+        explicit VALUE_Data(int val)         :  _int(val)           { }
+        explicit VALUE_Data(bool val)        : _bool(val)           { }
+        explicit VALUE_Data(float val)       : fp(val)              { }
+        explicit VALUE_Data(std::string val) : _str(std::move(val)) { }
+        explicit VALUE_Data(Object val)      : obj(std::move(val))  { }
     };
 public:
     RT_Value() : type(VOID) {};
-    explicit RT_Value(float val);
-    explicit RT_Value(bool val);
-    explicit RT_Value(int val);
-    explicit RT_Value(Mat val);
-    explicit RT_Value(std::string val);
-    explicit RT_Value(Object val);
-    RT_Value(const RT_Value& val);
-    RT_Value(RT_Value&& val) noexcept ;
-    RT_Value &operator=(RT_Value val);
+    explicit RT_Value(float);
+    explicit RT_Value(bool);
+    explicit RT_Value(int);
+    explicit RT_Value(Mat);
+    explicit RT_Value(std::string);
+    explicit RT_Value(Object);
+
+    RT_Value(const RT_Value&);
+    RT_Value(RT_Value&&) noexcept ;
+    RT_Value &operator=(RT_Value);
 
     RT_Value operator+(RT_Value rhs);
     RT_Value operator-(RT_Value rhs);
@@ -75,28 +76,20 @@ public:
     RT_Value operator^(RT_Value rhs);
 
     friend std::ostream& operator<<(std::ostream &os, const RT_Value &val);
+
+    bool to_bool();
+    template <int _Value_Type> bool is_type()     { return this->type == _Value_Type; }
+    template <int _Value_Type> bool is_not_type() { return this->type != _Value_Type; }
 public:
     Value_Type  type;
     VALUE_Data  data;
     bool        occupied = false;
-    bool to_bool();
-    template <int _Value_Type>
-    inline bool is_type() {
-        return this->type == _Value_Type;
-    }
-
-    template <int _Value_Type>
-    inline bool is_not_type() {
-        return this->type != _Value_Type;
-    }
 };
 
 struct RT_Function {
     std::vector<std::string>        params_name;
-    std::vector<RT_Value*>           params;
     std::shared_ptr<Block_AST>      block;
     std::shared_ptr<Expression_AST> ret;
-    bool occupied;
 };
 
 #endif //COMPILER_VALUE_H
