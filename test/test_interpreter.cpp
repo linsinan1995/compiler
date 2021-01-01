@@ -15,9 +15,9 @@ static int TEST_COUNT = 1;
 #define TEST_NAME(X) printf("==============TEST %d: %-10s==============\n", TEST_COUNT++, X);
 
 const char *code =
-        "var x = 23\n"
-        "x = x / 4\n"
-        "x";
+        "var x = 23.0\n"
+        "x = x / 4.0\n"
+        "x";  // 5.75
 
 const char *code2 =
         "var x = 5\n"
@@ -26,9 +26,9 @@ const char *code2 =
         "   x = b - 1\n"
         "   return a*b+x\n"
         "}\n"
-        "f(1, y)\n"
-        "f(1, x)\n"
-        "x = f(f(x,1),f(2, f(1,y)))\n"
+        "f(1, y)\n"  // 59
+        "f(1, x)\n"  // 9
+        "x = f(f(x,1),f(2, f(1,y)))\n" //
         "f(1,x)\n"
         "f(1,2)\n"
         "# f(a, b)\n"
@@ -44,9 +44,9 @@ const char *code3 =
         "    return z\n"
         "}\n"
         "\n"
-        "max(1,3)\n"
-        "max(-231,-253)\n"
-        "max(max(1,4),3)\n";
+        "max(1,3)\n"         // 3
+        "max(-231,-253)\n"   // -231
+        "max(max(1,4),3)\n"; // 4
 
 const char *code4 =
         "func to_equal(x, z) {\n"
@@ -55,44 +55,52 @@ const char *code4 =
         "    }\n"
         "    return x\n"
         "}\n"
-        "to_equal(10,4)\n"
-        "to_equal(to_equal(10,4),3)\n";
+        "to_equal(10,4)\n"   // 4
+        "to_equal(to_equal(10,4),3)\n";  // 3
 
 const char *code5 =
         "func x(a, b) {\n"
         "    return a * b\n"
         "}\n"
         "\n"
-        "x(1,2)\n"
-        "x(x(1,2),3)";
+        "x(1,2)\n"   // 2
+        "x(x(1,2),3)"; // 6
 
 const char *code6 =
+        "5\n" // 5
         "f(1,2)\n"
         "func f(a, b) { return a + b }\n"
-        "f(-1,2)\n"
-        "if (1+2 >= 3) { z = 3 } else { z = 2 } z\n"
+        "f(-1,2)\n" // 1
+        "if (1+2 >= 3) { z = 3 } else { z = 2 } z\n"  // 3
         "func f2(a, b) { if (a > b) { c = a+b } else { c = 0 } return c }\n"
-        "f2(1,2)\n"
-        "f2(f(1,2),1)\n"
-        "f2(2,1) <= f(1,2)";
-
+        "f2(1,2)\n" // 0
+        "f2(f(1,2),1)\n" // 4
+        "f2(2,1) <= f(1,2)" // true
+        "f2(2,1) < f(1,2)"; // false
 
 const char *code7 =
         "a = [4,5,6]\n"
         "b = [1,2,3]\n"
+        "a*[1,1]\n" // error
         "c = a + b\n"
+        "c\n"   // 5,7,9
         "c = a * b\n"
-        "a * [1,1,1]"
+        "c\n"   // 32
+        "a * [1,1,1]" // 15
         "a = [[1,2], [3, 4], [5,6]]\n"
         "b = [[1,2,3], [4,5,6]]\n"
-        "b*a\n"
-        "a*b\n"
-        "[1,1,1]*a\n"
-        "a*[1,1]\n"
-        "func mat(a,b) { return a*b }\n"
+        "b*a\n" // 22 28 / 49 64
+        "a*b\n" // 9 12 15 / 19 26 33 / 29 40 51
+        "[1,1,1]*a\n" // 9 12
+        "a*[1,1]\n"   // 3 7 11
+        "func mat(a,b) { "
+        "    c = a*b \n"
+        "    return c+1 \n"
+        "}\n"
         "var a = [[1,2,3] ,[4,5,6], [7,8,9]]\n"
         "var b = [[1,2],[3,4],[5,6]]\n"
-        "c = mat(a,b)";
+        "c = mat(a,b)"
+        "c"; // 23 29 / 50 65 / 77 101
 
 const char *code8 =
         "class MyVar {\n"
@@ -108,7 +116,6 @@ const char *code8 =
         "    }\n"
         "\n"
         "    func add_val_if_gt_inc(x) {\n"
-        "\n"
         "        if (x > val) {\n"
         "            x = x + val\n"
         "        } else {\n"
@@ -125,8 +132,18 @@ const char *code8 =
         "x = 10\n"
         "\n"
         "my_var.add_val_if_gt_inc(x)\n"
+        "x = x + 5\n"
         "my_var.add_val_if_gt_inc(x)\n"
         "my_var.get_val()\n"
+//        "my_var.val = 50\n"
+        "my_var.inc()\n"
+        "my_var.get_val()\n"
+        "my_var.inc()\n"
+        "my_var.get_val()\n"
+        "MyVar my_var_2\n" //
+        "my_var_2.get_val()\n"
+        "my_var.get_val()\n"
+        "my_var_2.val\n"
         "my_var.val\n"
         "";
 
@@ -141,12 +158,12 @@ struct builtin_register {
 };
 
 void driver(std::unique_ptr<Parser> &parser, AST_Interpreter& visitor) {
-    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
     for (auto &expr : v) {
         visitor.evaluate(*expr);
         if (!visitor.is_null())
-            std::cout << visitor.val << "\n";
+            std::cout << *visitor.val << "\n";
     }
     visitor.rt->clear();
 }
@@ -175,33 +192,34 @@ RT_Value builtin_println(Runtime* rt, const std::vector<RT_Value>& args) {
 int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
     AST_Interpreter interpreter {};
-//
-//    TEST_NAME("simple def")
-//    driver(parser, interpreter);
-//
-//    TEST_NAME("func def & call")
-//    parser = Parser::make_parser(code2);
-//    driver(parser, interpreter);
-//
-//    TEST_NAME("if block")
-//    parser = Parser::make_parser(code3);
-//    driver(parser, interpreter);
-//
-//    TEST_NAME("while block")
-//    parser = Parser::make_parser(code4);
-//    driver(parser, interpreter);
-//
-//    TEST_NAME("Read me")
-//    parser = Parser::make_parser(code5);
-//    driver(parser, interpreter);
-//
-//    TEST_NAME("Bug in operator>")
-//    parser = Parser::make_parser(code6);
-//    driver(parser, interpreter);
-//
-//    TEST_NAME("matrix")
-//    parser = Parser::make_parser(code7);
-//    driver(parser, interpreter);
+    std::cout << "sizeof(RT_Value): " << sizeof(RT_Value) <<std::endl;
+
+    TEST_NAME("simple def")
+    driver(parser, interpreter);
+
+    TEST_NAME("func def & call")
+    parser = Parser::make_parser(code2);
+    driver(parser, interpreter);
+
+    TEST_NAME("if block")
+    parser = Parser::make_parser(code3);
+    driver(parser, interpreter);
+
+    TEST_NAME("while block")
+    parser = Parser::make_parser(code4);
+    driver(parser, interpreter);
+
+    TEST_NAME("Read me")
+    parser = Parser::make_parser(code5);
+    driver(parser, interpreter);
+
+    TEST_NAME("Bug in operator>")
+    parser = Parser::make_parser(code6);
+    driver(parser, interpreter);
+
+    TEST_NAME("matrix")
+    parser = Parser::make_parser(code7);
+    driver(parser, interpreter);
 
     TEST_NAME("Class")
     parser = Parser::make_parser(code8);

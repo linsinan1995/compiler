@@ -53,7 +53,7 @@ const char *code =
 const char *code4 =
         "func max(x, z) {\n"
         "    if (x > z) {"
-        "#       a = x\n"
+        "#      a = x\n"
         "       x = z\n"
         "       z = x\n"
         "    }\n"
@@ -119,7 +119,7 @@ const char *code8 =
         "";
 
 void driver(std::unique_ptr<Parser> &parser, AST_Printer& visitor) {
-    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;
@@ -136,7 +136,7 @@ void driver_to_file(std::unique_ptr<Parser> &parser, const char *file_name) {
     }
 
     AST_Printer visitor (out);
-    std::vector<std::shared_ptr<Expression_AST>> v = parser->parse();
+    std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
 
     int line = 1;

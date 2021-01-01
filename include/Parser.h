@@ -12,10 +12,10 @@ namespace parser_ns {
 
 class Parser;
 
-using v_expr_ptr = std::vector<std::shared_ptr<Expression_AST>>;
-using ptr_expr = std::shared_ptr<Expression_AST>;
+using v_expr_ptr = std::vector<std::unique_ptr<Expression_AST>>;
+using ptr_expr = std::unique_ptr<Expression_AST>;
 using expr = Expression_AST;
-using ptr_assign_expr = std::shared_ptr<Assign_AST>;
+using ptr_assign_expr = std::unique_ptr<Assign_AST>;
 
 class Parser {
     void consume(Kind, const std::string &);

@@ -27,7 +27,7 @@ static std::map<int, int> precedence {
 };
 
 ptr_While_AST Parser::handle_while_statement() {
-    ptr_While_AST while_expr = std::make_shared<While_AST> ();
+    ptr_While_AST while_expr = std::make_unique<While_AST> ();
 
     // eat while
     next();
@@ -35,7 +35,7 @@ ptr_While_AST Parser::handle_while_statement() {
     // eat open paren
     consume(k_open_paren, "handle_while_statement");
 
-    while_expr->cond = parse_expr();
+    while_expr->cond = std::move(parse_expr());
 
     consume(k_close_paren, "handle_while_statement");
 
@@ -46,7 +46,7 @@ ptr_While_AST Parser::handle_while_statement() {
 }
 
 ptr_expr Parser::handle_class_statement() {
-    ptr_Class_AST class_expr = std::make_shared<Class_AST> ();
+    ptr_Class_AST class_expr = std::make_unique<Class_AST> ();
 
     // eat class keyword
     next();
@@ -72,8 +72,8 @@ ptr_expr Parser::handle_class_statement() {
 
             // assign
             if (cur_token->kind == op_assign) {
-                auto assign_stmt = std::make_shared<Assign_AST> ();
-                assign_stmt->var = std::make_shared<Variable_AST>(prev_tok->lexeme); // copy
+                auto assign_stmt = std::make_unique<Assign_AST> ();
+                assign_stmt->var = std::make_unique<Variable_AST>(prev_tok->lexeme); // copy
                 prev_tok = nullptr;
                 // eat =
                 next();
@@ -111,8 +111,8 @@ ptr_expr Parser::handle_general_statement() {
 
     // assign
     if (cur_token->kind == op_assign) {
-        auto assign_stmt = std::make_shared<Assign_AST> ();
-        assign_stmt->var = std::make_shared<Variable_AST>(prev_tok->lexeme); // copy
+        auto assign_stmt = std::make_unique<Assign_AST> ();
+        assign_stmt->var = std::make_unique<Variable_AST>(prev_tok->lexeme); // copy
         prev_tok = nullptr;
         // eat =
         next();
@@ -135,16 +135,16 @@ ptr_expr Parser::handle_general_statement() {
 
         // check it is a member variable or member function
         if (cur_token->kind == k_open_paren) {
-            auto object_call_stmt = std::make_shared<Class_Call_AST> ();
+            auto object_call_stmt = std::make_unique<Class_Call_AST> ();
             object_call_stmt->obj_name = raw_to_string(prev_tok->lexeme);
             object_call_stmt->func_name = std::move(dot_var_name);
             // reset prev_tok before parsing expression!
             prev_tok = nullptr;
-            object_call_stmt->args = parse_func_call_expr();
+            object_call_stmt->args = std::move(parse_func_call_expr());
 
             return object_call_stmt;
         } else {
-            auto object_var_stmt = std::make_shared<Class_Var_AST> ();
+            auto object_var_stmt = std::make_unique<Class_Var_AST> ();
             object_var_stmt->obj_name = raw_to_string(prev_tok->lexeme);
             object_var_stmt->var_name = std::move(dot_var_name);
             prev_tok = nullptr;
@@ -157,7 +157,7 @@ ptr_expr Parser::handle_general_statement() {
 
 
 ptr_expr Parser::handle_class_decl() {
-    auto expr = std::make_shared<Class_Decl_AST>();
+    auto expr = std::make_unique<Class_Decl_AST>();
     expr->class_name = raw_to_string(cur_token->lexeme);
 
     // eat class name
@@ -195,7 +195,7 @@ Parser::Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer))
 
 // block -> { expr_1 \n expr_2 \n ... expr_3 \n }
 ptr_Block_AST Parser::parse_block() {
-    auto block = std::make_shared<Block_AST> ();
+    auto block = std::make_unique<Block_AST> ();
 
     // eat open curly
     consume(k_open_curly, "parse_block");
@@ -215,7 +215,7 @@ ptr_Block_AST Parser::parse_block() {
 }
 
 ptr_Function_proto_AST Parser::parse_func_proto() {
-    auto proto = std::make_shared<Function_proto_AST> ();
+    auto proto = std::make_unique<Function_proto_AST> ();
     if (cur_token->kind != k_var) {
         return panic_nptr("Parsing Error: Function name should be a k_var instead of %s! \n",
                           names_kind[cur_token->kind]);
@@ -244,10 +244,10 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
 
 // block -> { expr_1 \n expr_2 \n ... expr_3 \n return xxx \n }
 ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
-    auto func = std::make_shared<Function_AST> ();
+    auto func = std::make_unique<Function_AST> ();
 
     func->args_with_func_name = std::move(proto);
-    func->func_body = std::make_shared<Block_AST> ();
+    func->func_body = std::make_unique<Block_AST> ();
 
     consume(k_open_curly, "parse_def_func_expr");
 
@@ -280,7 +280,7 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
 // if_stmt -> if ( expr ) block
 //            if ( expr ) block else block
 ptr_expr Parser::handle_if_statement() {
-    ptr_If_AST if_expr = std::make_shared<If_AST> ();
+    ptr_If_AST if_expr = std::make_unique<If_AST> ();
 
     // eat if keyword
     next();
@@ -324,7 +324,7 @@ ptr_Function_AST Parser::handle_def_func_statement() {
 }
 
 ptr_assign_expr Parser::parse_assign_expr() {
-    auto assign_stmt = std::make_shared<Assign_AST> ();
+    auto assign_stmt = std::make_unique<Assign_AST> ();
 
     // check id
     if (cur_token->kind != k_var)
@@ -332,7 +332,7 @@ ptr_assign_expr Parser::parse_assign_expr() {
                           "The parser expects variable, but get %s\n",
                           names_kind[cur_token->kind]);
 
-    assign_stmt->var = std::make_shared<Variable_AST>(cur_token->lexeme);
+    assign_stmt->var = std::make_unique<Variable_AST>(cur_token->lexeme);
 
     // eat id
     next();
@@ -355,7 +355,7 @@ inline
 ptr_Define_AST Parser::handle_def_statement() {
     // eat var
     next();
-    auto def_expr    = std::make_shared<Define_AST>();
+    auto def_expr    = std::make_unique<Define_AST>();
     auto assign_expr = parse_assign_expr();
     def_expr->var = std::move(assign_expr->var);
     def_expr->rhs = std::move(assign_expr->rhs);
@@ -410,7 +410,7 @@ ptr_expr Parser::parse_unary_expr() {
             return parse_paren_expr();
         case k_var:
             if (peek() == '(') {
-                auto call_expr = std::make_shared<Function_call_AST> ();
+                auto call_expr = std::make_unique<Function_call_AST> ();
                 call_expr->name = raw_to_string(cur_token->lexeme);
                 // eat func name
                 next();
@@ -448,15 +448,15 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
 
 ptr_expr Parser::parse_atom() {
     if (cur_token->kind == k_open_paren) {
-        auto call_expr = std::make_shared<Function_call_AST> ();
+        auto call_expr = std::make_unique<Function_call_AST> ();
         call_expr->name = raw_to_string(prev_tok->lexeme);
         prev_tok = nullptr;
 
-        call_expr->args = parse_func_call_expr();
+        call_expr->args = std::move(parse_func_call_expr());
         // eat close paren
         return call_expr;
     }
-    return std::make_shared<Variable_AST> (prev_tok->lexeme);
+    return std::make_unique<Variable_AST> (prev_tok->lexeme);
 }
 
 ptr_expr Parser::parse_expr(int prev_prec) {
@@ -466,7 +466,7 @@ ptr_expr Parser::parse_expr(int prev_prec) {
         expr = parse_atom();
         prev_tok = nullptr;
     } else {
-        expr = std::make_shared<Unary_expr_AST> (parse_unary_expr());
+        expr = std::make_unique<Unary_expr_AST> (parse_unary_expr());
         if (!expr) return nullptr;
     }
 
@@ -480,7 +480,7 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
         // eat op
         next();
-        auto bi_expr = std::make_shared<Binary_expr_AST> (std::move(expr),
+        auto bi_expr = std::make_unique<Binary_expr_AST> (std::move(expr),
                                                           op,
                                                           parse_expr(cur_prec+1));
         expr = std::move(bi_expr); // !
@@ -490,28 +490,28 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
 inline
 ptr_Float_point_AST Parser::parse_fp_expr() {
-    auto expr = std::make_shared<Float_point_AST> (get_val_tok_fp(cur_token.get()));
+    auto expr = std::make_unique<Float_point_AST> (get_val_tok_fp(cur_token.get()));
     next();
     return expr;
 }
 
 inline
 ptr_Integer_AST Parser::parse_int_expr() {
-    auto expr = std::make_shared<Integer_AST> (get_val_tok_int(cur_token.get()));
+    auto expr = std::make_unique<Integer_AST> (get_val_tok_int(cur_token.get()));
     next();
     return expr;
 }
 
 inline
 ptr_STR_AST Parser::parse_string_expr() {
-    auto expr = std::make_shared<STR_AST> (cur_token->lexeme);
+    auto expr = std::make_unique<STR_AST> (cur_token->lexeme);
     next();
     return expr;
 }
 
 inline
 ptr_Variable_AST Parser::parse_id_expr() {
-    auto expr = std::make_shared<Variable_AST> (cur_token->lexeme);
+    auto expr = std::make_unique<Variable_AST> (cur_token->lexeme);
     next();
     return expr;
 }
@@ -531,13 +531,13 @@ ptr_expr Parser::parse_neg_number_expr() {
     next();
 
     if (cur_token->kind == k_int) {
-        auto expr = std::make_shared<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
+        auto expr = std::make_unique<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
         next();
         return expr;
     }
 
     if (cur_token->kind == k_fp) {
-        auto expr = std::make_shared<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
+        auto expr = std::make_unique<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
         next();
         return expr;
     }
@@ -548,7 +548,7 @@ ptr_expr Parser::parse_neg_number_expr() {
 
 ptr_expr Parser::parse_matrix_expr() {
     consume(k_open_bracket, "parse_matrix_expr");
-    auto mat = std::make_shared<Matrix_AST>();
+    auto mat = std::make_unique<Matrix_AST>();
 
     do {
         while (cur_token->kind == k_open_bracket) {

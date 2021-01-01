@@ -26,11 +26,12 @@ struct Mat {
 
 struct Object {
     std::string type_name;
-    std::shared_ptr<RT_Function> get_function(const std::string &);
-    RT_Value get_variable(const std::string &);
+    RT_Function* get_function(const std::string &);
+    RT_Value* get_variable(const std::string &);
 
-    std::unordered_map<std::string, RT_Value>     member_vars {};
-    std::unordered_map<std::string, std::shared_ptr<RT_Function>>  member_functions {}; // weak_ptr
+    std::unordered_map<std::string, RT_Value*>     member_vars {};
+    std::unordered_map<std::string, RT_Function*>  member_functions {}; // weak_ptr
+    void update_variable(const std::string &name, RT_Value *ptr_value);
 };
 
 class RT_Value {
@@ -77,8 +78,8 @@ public:
 public:
     Value_Type  type;
     VALUE_Data  data;
+    bool        occupied = false;
     bool to_bool();
-
     template <int _Value_Type>
     inline bool is_type() {
         return this->type == _Value_Type;
@@ -92,9 +93,10 @@ public:
 
 struct RT_Function {
     std::vector<std::string>        params_name;
-    std::vector<RT_Value>           params;
+    std::vector<RT_Value*>           params;
     std::shared_ptr<Block_AST>      block;
     std::shared_ptr<Expression_AST> ret;
+    bool occupied;
 };
 
 #endif //COMPILER_VALUE_H

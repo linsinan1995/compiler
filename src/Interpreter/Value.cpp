@@ -194,6 +194,11 @@ RT_Value RT_Value::operator*(RT_Value rhs) {
 
         // one dimension
         if (data.matrix.dim.size() == 1 && rhs.data.matrix.dim.size() == 1) {
+            if (data.matrix.dim[0] != rhs.data.matrix.dim[0])
+                return panic_type<RT_Value>("Runtime Error: Wrong shape of matrix! "
+                                            "The shape of matrix_1 is %d, but the "
+                                            "shape of matrix_2 is %d\n",
+                                            data.matrix.dim[0], rhs.data.matrix.dim[0]);
             float res = 0;
             for (int i = 0; i < data.matrix.data.size(); i++) {
                 res += data.matrix.data[i] * rhs.data.matrix.data[i];
@@ -221,7 +226,7 @@ RT_Value RT_Value::operator*(RT_Value rhs) {
                              mat.data, I, K);
 
         } else if (rhs.data.matrix.dim.size() == 1 || data.matrix.dim.size() == 1)  {
-            return panic_type<RT_Value>("Runtime Error: wrong shape of matrix!\n");
+            return panic_type<RT_Value>("Runtime Error: Wrong shape of matrix!\n");
         } else if (data.matrix.dim[1] == rhs.data.matrix.dim[0]) {
             size_of_mat = rhs.data.matrix.dim[1]*data.matrix.dim[0];
             mat.dim = std::vector<int> {data.matrix.dim[0], rhs.data.matrix.dim[1]};
@@ -554,18 +559,32 @@ std::ostream &operator<<(std::ostream &os, const RT_Value &val) {
     }
 }
 
-RT_Value Object::get_variable(const std::string &name) {
+RT_Value* Object::get_variable(const std::string &name) {
     if (auto var = member_vars.find(name); var != member_vars.end()) {
         return var->second;
     }
 
-    return {};
+    return nullptr;
 }
 
-std::shared_ptr<RT_Function> Object::get_function(const std::string &name) {
+RT_Function* Object::get_function(const std::string &name) {
     if (auto var = member_functions.find(name); var != member_functions.end()) {
         return var->second;
     }
 
     return nullptr;
+}
+
+void Object::update_variable(const std::string &name, RT_Value *ptr_value) {
+    if (auto var = member_vars.find(name); var != member_vars.end()) {
+//        std::cout << "assigning value addr: " << ptr_value << std::endl;
+//        std::cout << "assigned value addr: " << var->second << std::endl;
+        *var->second = *ptr_value;
+//        std::cout << "final value addr: " << var->second << std::endl;
+        return;
+    }
+
+    panic("Runtime notice: Try to update an invalid"
+          " member variable %s in class %s.\n",
+          name.c_str(), this->type_name.c_str());
 }

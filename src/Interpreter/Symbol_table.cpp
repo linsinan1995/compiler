@@ -19,29 +19,29 @@
 #include "Interpreter/Symbol_table.h"
 #include "helper.h"
 
-std::shared_ptr<RT_Function> Symbol_Table::get_function(const std::string &func_name) {
+RT_Function* Symbol_Table::get_function(const std::string &func_name) {
     auto entry = funcs.find(func_name);
     if (entry != funcs.end()) {
         return entry->second;
     }
 
-    return panic_nptr("Runtime Error: Function %s is not found!\n", func_name.c_str());
+    return nullptr;
 }
 
-RT_Value Symbol_Table::get_variable(const std::string &var_name) {
+RT_Value* Symbol_Table::get_variable(const std::string &var_name) {
     if (auto entry = vars.find(var_name); entry != vars.end()) {
         return entry->second;
     }
 
-    return panic_type<RT_Value>("Runtime Error: Variable %s is not found!\n", var_name.c_str());
+    return nullptr;
 }
 
-void Symbol_Table::insert(const std::string& name, RT_Value val) {
-    vars[name] = std::move(val);
+void Symbol_Table::insert(const std::string& name, RT_Value *val) {
+    vars[name] = val;
 }
 
-void Symbol_Table::insert(const std::string &name, std::shared_ptr<RT_Function> fun) {
-    funcs[name] = std::move(fun);
+void Symbol_Table::insert(const std::string &name, RT_Function* fun) {
+    funcs[name] = fun;
 }
 
 Global_Class_Entry *Global_Class_Table::get(const std::string &class_name) {
@@ -49,20 +49,15 @@ Global_Class_Entry *Global_Class_Table::get(const std::string &class_name) {
         return class_entry->second.get();
     }
 
-    return panic_nptr("Runtime Error: Class %s is not found!\n", class_name.c_str());
+    return nullptr;
 }
 
 void Global_Class_Table::insert(const std::string &name, ptr_Gloabl_Class_Entry entry) {
     class_map[name] = std::move(entry);
 }
 
-void Global_Class_Entry::dump(Object *obj) {
-    // variables
-    for (auto & var : vars) {
-        obj->member_vars[var.first] = var.second;
-    }
-
-    // function
+void Global_Class_Entry::dump_function(Object *obj) {
+    // function: directly pass function addr
     for (auto & func : funcs) {
         obj->member_functions[func.first] = func.second;
     }

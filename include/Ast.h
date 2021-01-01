@@ -27,24 +27,24 @@
 #include "Interpreter/Runtime.h"
 #include "AST_visitor.h"
 
-using ptr_Define_AST         = std::shared_ptr<Define_AST>;
-using ptr_Function_proto_AST = std::shared_ptr<Function_proto_AST>;
-using ptr_Function_call_AST  = std::shared_ptr<Function_call_AST>;
-using ptr_Function_AST       = std::shared_ptr<Function_AST>;
-using ptr_Variable_AST       = std::shared_ptr<Variable_AST>;
-using ptr_Expression_AST     = std::shared_ptr<Expression_AST>;
-using ptr_Binary_expr_AST    = std::shared_ptr<Binary_expr_AST>;
-using ptr_Integer_AST        = std::shared_ptr<Integer_AST>;
-using ptr_Float_point_AST    = std::shared_ptr<Float_point_AST>;
-using ptr_Block_AST          = std::shared_ptr<Block_AST>;
-using ptr_Assign_AST         = std::shared_ptr<Assign_AST>;
-using ptr_If_AST             = std::shared_ptr<If_AST>;
-using ptr_While_AST          = std::shared_ptr<While_AST>;
-using ptr_Unary_expr_AST     = std::shared_ptr<Unary_expr_AST>;
-using ptr_STR_AST            = std::shared_ptr<STR_AST>;
-using ptr_Class_AST          = std::shared_ptr<Class_AST>;
-using ptr_Class_Call_AST     = std::shared_ptr<Class_Call_AST>;
-using ptr_Class_Var_AST      = std::shared_ptr<Class_Var_AST>;
+using ptr_Define_AST         = std::unique_ptr<Define_AST>;
+using ptr_Function_proto_AST = std::unique_ptr<Function_proto_AST>;
+using ptr_Function_call_AST  = std::unique_ptr<Function_call_AST>;
+using ptr_Function_AST       = std::unique_ptr<Function_AST>;
+using ptr_Variable_AST       = std::unique_ptr<Variable_AST>;
+using ptr_Expression_AST     = std::unique_ptr<Expression_AST>;
+using ptr_Binary_expr_AST    = std::unique_ptr<Binary_expr_AST>;
+using ptr_Integer_AST        = std::unique_ptr<Integer_AST>;
+using ptr_Float_point_AST    = std::unique_ptr<Float_point_AST>;
+using ptr_Block_AST          = std::unique_ptr<Block_AST>;
+using ptr_Assign_AST         = std::unique_ptr<Assign_AST>;
+using ptr_If_AST             = std::unique_ptr<If_AST>;
+using ptr_While_AST          = std::unique_ptr<While_AST>;
+using ptr_Unary_expr_AST     = std::unique_ptr<Unary_expr_AST>;
+using ptr_STR_AST            = std::unique_ptr<STR_AST>;
+using ptr_Class_AST          = std::unique_ptr<Class_AST>;
+using ptr_Class_Call_AST     = std::unique_ptr<Class_Call_AST>;
+using ptr_Class_Var_AST      = std::unique_ptr<Class_Var_AST>;
 
 struct Expression_AST {
     virtual ~Expression_AST() = default;
@@ -100,9 +100,9 @@ struct Function_proto_AST : public Expression_AST {
 };
 
 struct Function_AST : public Expression_AST {
-    std::shared_ptr<Block_AST>           func_body;
-    std::shared_ptr<Expression_AST>      return_expr;
-    std::shared_ptr<Function_proto_AST>  args_with_func_name;
+    std::unique_ptr<Block_AST>           func_body;
+    std::unique_ptr<Expression_AST>      return_expr;
+    std::unique_ptr<Function_proto_AST>  args_with_func_name;
 
     void accept(AST_Visitor &visitor) override;
 };
