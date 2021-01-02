@@ -90,36 +90,36 @@ cmake --build . -j 4 -t ide
 
 ## 1. define a variable
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_var.png" img width="200">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_var.png" img>
 </p>
 
 ## 2. control flow
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/control_flow.png" img width="200">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/control_flow.png" img>
 </p>
 
 ## 3. define a function
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_fun.png" img width="200">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_fun.png" img>
 </p>
 
 ## 4. matrix operation
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/error_handling.png" img width="200">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/error_handling.png" img>
 </p>
 
 ## 5. built-in function
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_built_in.png" img width="200">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_built_in.png" img>
 </p>
 
 ## 6. customized class
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class.png" img width="200">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class.png" img>
 </p>
 
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class2.png" img width="200">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class2.png" img>
 </p>
 
 # Lexing
