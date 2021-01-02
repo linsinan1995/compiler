@@ -88,20 +88,20 @@ cmake --build . -j 4 -t ide
 // cmake --build . -j 4
 ```
 # Interpreter
-
+Some demo for representing the features of this language.
 ## 1. define a variable
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_var.png" img>
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_var.png" img width="400">
 </p>
 
 ## 2. control flow
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/control_flow.png" img>
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/control_flow.png" img width="300">
 </p>
 
 ## 3. define a function
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_fun.png" img>
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_fun.png" img width="500">
 </p>
 
 ## 4. matrix operation
@@ -111,16 +111,16 @@ cmake --build . -j 4 -t ide
 
 ## 5. built-in function
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_built_in.png" img>
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_built_in.png" img width="300">
 </p>
 
 ## 6. customized class
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class.png" img>
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class.png" img width="500">
 </p>
 
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class2.png" img>
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class2.png" img width="450">
 </p>
 
 # Lexing
