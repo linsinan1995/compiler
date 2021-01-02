@@ -555,7 +555,7 @@ std::ostream &operator<<(std::ostream &os, const RT_Value &val) {
             mat_print_helepr(os, val.data.matrix.data, val.data.matrix.dim);
             return os;
         case OBJECT:
-            os << "Class: " << val.data.obj.type_name << "\n";
+            os << "\nObject: " << val.data.obj.type_name << "\n";
             if (val.data.obj.member_vars.empty()) std::cout << "No member variables!\n";
             else std::cout << "[Member variables]:\n";
 

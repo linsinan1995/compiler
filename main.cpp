@@ -65,8 +65,8 @@ template<> void main_loop<T_INTERPRETER>() {
 
     do {
         printf(">> ");
-        fflush(stdin);
         char *p_read_chars = ptr_reader->read();
+        if (!p_read_chars) continue;
         if (strcmp(p_read_chars, "quit\n") == 0) break;
 
         parser->read(p_read_chars);
@@ -81,6 +81,8 @@ template<> void main_loop<T_INTERPRETER>() {
                 std::cout << *(interpreter.m_val) << "\n";
             }
         }
+        // todo : better memory management for k_string
+        free(p_read_chars);
     } while (true);
 
     exit(EXIT_SUCCESS);

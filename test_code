@@ -5,13 +5,20 @@ info()
 
 # control flow
 a = 1
-if (1+2 >= 3) {
+if (a+2 >= 3) {
     z = 3
 } else {
     z = 2
 }
 
 # define a function
+func add_x(a, x) {
+    return a + x
+}
+
+add_x(1, add_x(0, 5) * add_x(0, 4))
+
+# define a nested function
 func bigger(a, b) {
     # if a > b, return a+b, otherwise return 0;
     func cmp(a,b) { return a > b }
@@ -28,8 +35,10 @@ println(a, bigger(a, a+1)) # 4, 0
 
 
 # error handling
+no_this_var
 no_this_function(1, 2)
-
+func_info("no_this_function")
+func_info("add_x")
 
 # generic function
 func multiply(a,b) {
@@ -62,41 +71,27 @@ help()
 # customized class
 class Add {
     inc = 10
-    func add(x) {
-        return inc + x
-    }
-
-    func inner_add(x) {
-        inc = inc + x
-    }
-
-    func wow() {
-        println("WOW")
-    }
+    func add(x) { return inc + x }
+    func inner_add(x) { inc = inc + x }
+    func wow() { println("WOW") }
 }
 
+# initialize an object
 Add adder
 adder.add(10)
+
 adder.inner_add(10) # modify member variable
+adder.inc
 
 Add adder2
-adder.add(10)
-adder2.add(10) # member variables are isolated in different objects
+adder2.inc # member var in adder2 is not effected
 
 # class overload
 class Add {
     inc = 10
-    func add(x) {
-        return inc + x
-    }
-
-    func inner_minus(x) {
-        inc = inc - x
-    }
-
-    func moew() {
-        println("MOEW")
-    }
+    func add(x) { return inc + x }
+    func inner_minus(x) { inc = inc - x }
+    func moew() { println("MOEW") }
 }
 Add add_modified
 add_modified.wow()

@@ -188,7 +188,7 @@
 //    // end of the function.
 //
 //    // it passes “func” into the constructor for the “if” block. This causes the constructor to automatically
-//    // insert the new block into the end of the specified function. The other two blocks are created,
+//    // insert the new block into the end of the specified function. The pic two blocks are created,
 //    // but aren’t yet inserted into the function.
 //    BasicBlock *if_basic_block   = BasicBlock::Create(*context, "ifblock", func);
 //    BasicBlock *else_basic_block = BasicBlock::Create(*context, "elseblock");

@@ -1,14 +1,21 @@
 # Intro
-Design a language with interpreter, JIT and AoT compilation execution modes. It is supposed to support high performance matrix multiplication through utilizing MLIR.
+Design a language with interpreter, JIT and AoT compilation execution modes. It is supposed to support object-oriented programming paradigm and high performance matrix multiplication through utilizing MLIR.
 
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/other/res.png" img width="400">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/res.png" img width="400">
 </p>
 
-# Table of Contents
+# Table of Content
 - [Intro](#intro)
 - [Work List](#work-list)
-- [How to build](#How-to-build)
+- [How to build](#how-to-build)
+- [Interpreter](#interpreter)
+  * [1. define a variable](#1-define-a-variable)
+  * [2. control flow](#2-control-flow)
+  * [3. define a function](#3-define-a-function)
+  * [4. matrix operation](#4-matrix-operation)
+  * [5. built-in function](#5-built-in-function)
+  * [6. customized class](#6-customized-class)
 - [Lexing](#lexing)
 - [Parsing](#parsing)
 - [Execution](#execution)
@@ -19,7 +26,8 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   * [RAII helper for indentation control](#raii-helper-for-indentation-control)
   * [RAII switch helper](#raii-switch-helper)
   * [Variadic template for pushing data elegantly](#variadic-template-for-pushing-data-elegantly)
-  
+  * [X macro for managing enum value](#x-macro-for-managing-enum-value)
+
 # Work List
 - Finished
   - Lexer
@@ -78,6 +86,41 @@ cmake --build . -j 4 -t ide
 // build all
 // cmake --build . -j 4
 ```
+# Interpreter
+
+## 1. define a variable
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_var.png" img width="200">
+</p>
+
+## 2. control flow
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/control_flow.png" img width="200">
+</p>
+
+## 3. define a function
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_fun.png" img width="200">
+</p>
+
+## 4. matrix operation
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/error_handling.png" img width="200">
+</p>
+
+## 5. built-in function
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_built_in.png" img width="200">
+</p>
+
+## 6. customized class
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class.png" img width="200">
+</p>
+
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/customized_class2.png" img width="200">
+</p>
 
 # Lexing
 

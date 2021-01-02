@@ -86,7 +86,7 @@ namespace built_in_function {
                                         "builtin_print_statue! It required 0 but got %d "
                                         "arguments\n", args.size());
         }
-
+        cmd_color_yellow();
         std::cout << "\n==========STATUE==========\n";
         std::cout << "[context level]: " << rt->sym_table.size() << "\n";
         std::cout << "[local vars]: \n";
@@ -99,6 +99,7 @@ namespace built_in_function {
             builtin_print_func_args(rt, { &rt_str_name });
         }
         std::cout << "==========================\n";
+        cmd_color_reset();
         return {};
     }
 }

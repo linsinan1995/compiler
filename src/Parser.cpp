@@ -106,7 +106,7 @@ ptr_expr Parser::handle_class_statement() {
 // var =  expr
 // var == expr
 // func(3) op expr ...
-// var other op expr
+// var pic op expr
 //    return parse_assign_expr();
 ptr_expr Parser::handle_general_statement() {
     if (cur_token->kind != k_var) return parse_expr();
