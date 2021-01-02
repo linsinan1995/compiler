@@ -61,7 +61,7 @@ public:
 struct STR_AST : public Expression_AST {
 public:
     std::string val;
-    explicit STR_AST(raw_string m_val) : val(raw_to_string(m_val)) {}
+    explicit STR_AST(_string_view m_val) : val(m_val.to_string()) {}
     void accept(AST_Visitor &visitor) override;
 };
 
@@ -81,7 +81,7 @@ public:
 
 struct Variable_AST : public Expression_AST {
     std::string name;
-    explicit Variable_AST(raw_string& m_name) : name(raw_to_string(m_name))
+    explicit Variable_AST(_string_view& m_name) : name(m_name.to_string())
     {}
     void accept(AST_Visitor &visitor) override;
 };

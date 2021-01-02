@@ -78,6 +78,6 @@ int main() {
     for (auto &&expr : v) {
         interpreter.evaluate(*expr);
         if (!interpreter.is_null())
-            std::cout << interpreter.val << "\n";
+            std::cout << interpreter.m_val << "\n";
     }
 }

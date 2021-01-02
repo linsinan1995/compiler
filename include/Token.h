@@ -6,15 +6,14 @@
 #define COMPILER_TOKEN_H
 
 #include "Enum.h"
+#include "String_view.h"
 
-typedef struct {
-    size_t       len;
-    const char  *content;
-} raw_string;
-
-typedef struct {
-    raw_string    lexeme;
+struct Token {
+    _string_view  lexeme;
     Kind          kind;
-} Token;
+    float to_fp()  { return strtof(lexeme.content, nullptr); }
+    int   to_int() { return static_cast<int> (strtol(lexeme.content, nullptr, 10)); }
+};
+
 
 #endif //COMPILER_TOKEN_H

@@ -11,9 +11,6 @@
 
 class AST_Interpreter : public AST_Visitor {
 public:
-    std::unique_ptr<runtime_ns::Runtime> rt;
-    Object *m_object = nullptr;
-    RT_Value *val = nullptr;
     void reset();
     void evaluate(Expression_AST &) override ;
 
@@ -38,10 +35,15 @@ public:
     void visit_class_call(Class_Call_AST     &) override ;
 
     void mat_helper(Matrix_AST &, std::vector<float>&, std::vector<int>&);
-    bool is_null() { return val == nullptr || val->is_type<VOID>(); }
+    bool is_null() { return m_val == nullptr || m_val->is_type<VOID>(); }
 
     AST_Interpreter() : rt(runtime_ns::Runtime::make_runtime())
     {}
+
+public:
+    std::unique_ptr<runtime_ns::Runtime> rt;
+    Object   *m_object = nullptr;
+    RT_Value *m_val    = nullptr;
 };
 
 #endif //COMPILER_AST_INTERPRETER_H

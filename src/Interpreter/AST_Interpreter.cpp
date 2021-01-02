@@ -24,25 +24,28 @@ using namespace runtime_ns;
 
 void AST_Interpreter::visit_var(Variable_AST &expr) {
     reset();
-    if (m_object) val = m_object->get_variable(expr.name);
+    if (m_object) m_val = m_object->get_variable(expr.name);
 
-    if (!val)
-        val = rt->get_variable(expr.name);
+    if (!m_val)
+        m_val = rt->get_variable(expr.name);
+
+    if (!m_val)
+        panic("Runtime error: Variable %s is not found!\n", expr.name.c_str());
 }
 
 void AST_Interpreter::visit_fp(Float_point_AST &expr) {
     reset();
-    val = rt->allocator->alloc_var(expr.val);
+    m_val = rt->allocator->alloc_var(expr.val);
 }
 
 void AST_Interpreter::visit_int(Integer_AST &expr) {
     reset();
-    val = rt->allocator->alloc_var(expr.val);
+    m_val = rt->allocator->alloc_var(expr.val);
 }
 
 void AST_Interpreter::visit_str(STR_AST &expr) {
     reset();
-    val = rt->allocator->alloc_var(expr.val);
+    m_val = rt->allocator->alloc_var(expr.val);
 }
 
 void AST_Interpreter::mat_helper(Matrix_AST &expr, std::vector<float> &data, std::vector<int> &dim) {
@@ -73,7 +76,7 @@ void AST_Interpreter::visit_mat(Matrix_AST &expr) {
     mat.dim = dims;
     mat.data = data;
     reset();
-    val = rt->allocator->alloc_var(std::move(mat));
+    m_val = rt->allocator->alloc_var(std::move(mat));
 }
 
 void AST_Interpreter::visit_unary(Unary_expr_AST &expr) {
@@ -83,12 +86,14 @@ void AST_Interpreter::visit_unary(Unary_expr_AST &expr) {
 void AST_Interpreter::visit_binary(Binary_expr_AST &expr) {
     reset();
     expr.LHS->accept(*this);
-    RT_Value *l_val = val;
-    val = nullptr;
+    RT_Value *l_val = m_val;
+    m_val = nullptr;
 
     expr.RHS->accept(*this);
-    RT_Value *r_val = val;
-    val = rt->allocator->alloc_var();
+    RT_Value *r_val = m_val;
+    m_val = rt->allocator->alloc_var();
+
+    if (!l_val || !r_val) return;
 
     switch(expr.op) {
         default:
@@ -97,39 +102,39 @@ void AST_Interpreter::visit_binary(Binary_expr_AST &expr) {
             reset();
             break;
         case op_add:
-            *val = *l_val + *r_val;
+            *m_val = *l_val + *r_val;
             break;
         case op_sub:
-            *val = *l_val - *r_val;
+            *m_val = *l_val - *r_val;
             break;
         case op_mul:
-            *val = *l_val * *r_val;
+            *m_val = *l_val * *r_val;
             break;
         case op_div:
-            *val = *l_val / *r_val;
+            *m_val = *l_val / *r_val;
             break;
         case op_gt:
-            *val = *l_val > *r_val;
+            *m_val = *l_val > *r_val;
             break;
         case op_ge:
-            *val = *l_val >= *r_val;
+            *m_val = *l_val >= *r_val;
             break;
         case op_lt:
-            *val = *l_val < *r_val;
+            *m_val = *l_val < *r_val;
             break;
         case op_le:
-            *val = *l_val <= *r_val;
+            *m_val = *l_val <= *r_val;
             break;
         case op_pow:
-            *val = *l_val * *r_val;
+            *m_val = *l_val * *r_val;
             break;
         case op_equal:
-            *val = *l_val == *r_val;
+            *m_val = *l_val == *r_val;
             break;
     }
-    // addr of r_val == addr of val
-    if (l_val && !l_val->occupied) rt->allocator->dealloc_var(l_val);
-    if (r_val && !r_val->occupied) rt->allocator->dealloc_var(r_val);
+    // addr of r_val == addr of m_val
+    if (!l_val->occupied) rt->allocator->dealloc_var(l_val);
+    if (!r_val->occupied) rt->allocator->dealloc_var(r_val);
 }
 
 void AST_Interpreter::visit_block(Block_AST &expr) {
@@ -154,8 +159,8 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
     std::vector<RT_Value*> v_args;
     for (auto &arg : expr.args) {
         arg->accept(*this);
-        v_args.push_back(val);
-        val = nullptr;
+        v_args.push_back(m_val);
+        m_val = nullptr;
     }
 
     if (!func) {
@@ -169,7 +174,7 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
         }
 
         reset();
-        val = rt->allocator->alloc_var(std::move(f(rt.get(), v_args)));
+        m_val = rt->allocator->alloc_var(std::move(f(rt.get(), v_args)));
         return;
     }
 
@@ -205,7 +210,7 @@ void AST_Interpreter::visit_func(Function_AST &expr) {
 
 void AST_Interpreter::visit_if(If_AST &expr) {
     expr.cond->accept(*this);
-    RT_Value *cond_res = val;
+    RT_Value *cond_res = m_val;
 
     if (cond_res->to_bool() && expr.if_block){
         reset();
@@ -221,7 +226,7 @@ void AST_Interpreter::visit_if(If_AST &expr) {
 void AST_Interpreter::visit_while(While_AST &expr) {
     expr.cond->accept(*this);
 
-    while (val->to_bool()){
+    while (m_val->to_bool()){
         reset();
         expr.while_block->accept(*this);
         expr.cond->accept(*this);
@@ -232,28 +237,28 @@ void AST_Interpreter::visit_while(While_AST &expr) {
 
 void AST_Interpreter::visit_def(Define_AST &expr) {
     expr.rhs->accept(*this);
-    val->occupied = true;
-    rt->creat_variable(expr.var->name, val);
-    val = nullptr;
+    m_val->occupied = true;
+    rt->creat_variable(expr.var->name, m_val);
+    m_val = nullptr;
 }
 
 void AST_Interpreter::visit_assign(Assign_AST &expr) {
-    expr.rhs->accept(*this); // it also assigns value to rt->val
+    expr.rhs->accept(*this); // it also assigns value to rt->m_val
     if (m_object) {
         auto m_obj_inner_val = m_object->get_variable(expr.var->name);
         if (m_obj_inner_val) {
-            m_object->update_variable(expr.var->name, val);
+            m_object->update_variable(expr.var->name, m_val);
             // deallocate previous value pointer
             // todo:
             //      deallocation strategies for 1.local variable 2.object variable
             //      scope -> from bool to int or bit-mask
-            // rt->allocator->dealloc_var(val);
+            // rt->allocator->dealloc_var(m_val);
             reset();
             return;
         }
     }
 
-    rt->creat_variable(expr.var->name, val);
+    rt->creat_variable(expr.var->name, m_val);
     reset();
 }
 
@@ -274,9 +279,9 @@ void AST_Interpreter::visit_class(Class_AST &expr) {
     // variables
     for (auto & var : expr.vars) {
         var->rhs->accept(*this);
-        val->occupied = true;
-        entry->vars.emplace_back(std::move(var->var->name), val);
-        val = nullptr;
+        m_val->occupied = true;
+        entry->vars.emplace_back(std::move(var->var->name), m_val);
+        m_val = nullptr;
     }
 
     rt->class_table.insert(expr.type_name, std::move(entry));
@@ -307,17 +312,17 @@ void AST_Interpreter::visit_class_decl(Class_Decl_AST &expr) {
 
 void AST_Interpreter::visit_class_var(Class_Var_AST &expr) {
     reset();
-    val = rt->get_variable(expr.obj_name);
-    if (val->is_type<VOID>()) {
+    m_val = rt->get_variable(expr.obj_name);
+    if (m_val->is_type<VOID>()) {
         panic("Runtime Error : Object %s has not been defined!\n",
               expr.obj_name.c_str());
         reset();
         return;
     }
 
-    if (auto res = val->data.obj.get_variable(expr.var_name); !res->is_type<VOID>()) {
+    if (auto res = m_val->data.obj.get_variable(expr.var_name); !res->is_type<VOID>()) {
         reset();
-        val = res;
+        m_val = res;
     } else {
         panic("Runtime Error : member variable %s in %s has not been defined!\n",
               expr.var_name.c_str(), expr.obj_name.c_str());
@@ -348,8 +353,8 @@ void AST_Interpreter::visit_class_call(Class_Call_AST &expr) {
 
     for (auto &arg : expr.args) {
         arg->accept(*this);
-        v_args.push_back(val);
-        val = nullptr;
+        v_args.push_back(m_val);
+        m_val = nullptr;
     }
 
     if (func->params_name.size() != expr.args.size()) {
@@ -378,6 +383,6 @@ void AST_Interpreter::evaluate(Expression_AST &expr) {
 }
 
 void AST_Interpreter::reset() {
-    if (val && !val->occupied) rt->allocator->dealloc_var(val);
-    val = nullptr;
+    if (m_val && !m_val->occupied) rt->allocator->dealloc_var(m_val);
+    m_val = nullptr;
 }

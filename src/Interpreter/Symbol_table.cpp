@@ -56,6 +56,10 @@ void Global_Class_Table::insert(const std::string &name, ptr_Gloabl_Class_Entry 
     class_map[name] = std::move(entry);
 }
 
+int Global_Class_Table::size() {
+    return this->class_map.size();
+}
+
 void Global_Class_Entry::dump_function(Object *obj) {
     // function: directly pass function addr
     for (auto & func : funcs) {

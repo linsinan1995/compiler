@@ -45,33 +45,33 @@ RT_Function* Runtime::get_function(const std::string &name) {
 }
 
 //template<typename T>
-//void Runtime::creat_variable(const std::string& name, T val,
+//void Runtime::creat_variable(const std::string& name, T m_val,
 //                    typename std::enable_if<!(std::is_pointer<T>::value ||
 //                                              std::is_null_pointer<T>::value)>::type) {
-//    if (!val) val = allocator->alloc_var();
-//    else      val = allocator->alloc_var(*val);
+//    if (!m_val) m_val = allocator->alloc_var();
+//    else      m_val = allocator->alloc_var(*m_val);
 //
-//    val->occupied = true;
+//    m_val->occupied = true;
 //
 //    // Replace & deallocate previous value
 //    if (auto entry = sym_table.back().vars.find(name); entry != sym_table.back().vars.end()) {
 //        allocator->dealloc_var(entry->second);
 //    }
 //
-//    sym_table.back().insert(name, val);
+//    sym_table.back().insert(name, m_val);
 //}
-//void Runtime::creat_variable(const std::string& name, RT_Value *val) {
-//    if (!val) val = allocator->alloc_var();
-//    else      val = allocator->alloc_var(*val);
+//void Runtime::creat_variable(const std::string& name, RT_Value *m_val) {
+//    if (!m_val) m_val = allocator->alloc_var();
+//    else      m_val = allocator->alloc_var(*m_val);
 //
-//    val->occupied = true;
+//    m_val->occupied = true;
 //
 //    // Replace & deallocate previous value
 //    if (auto entry = sym_table.back().vars.find(name); entry != sym_table.back().vars.end()) {
 //        allocator->dealloc_var(entry->second);
 //    }
 //
-//    sym_table.back().insert(name, val);
+//    sym_table.back().insert(name, m_val);
 //}
 
 RT_Value* Runtime::get_variable(const std::string &name) {

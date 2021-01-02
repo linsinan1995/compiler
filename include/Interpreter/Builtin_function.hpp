@@ -13,6 +13,32 @@
 namespace built_in_function {
     using namespace runtime_ns;
 
+    // list registered class
+    RT_Value builtin_class_table(Runtime* rt, std::vector<RT_Value*> args) {
+        int i = 0;
+        int n_class = rt->class_table.size();
+        for (auto &[name, _] : rt->class_table.class_map) {
+            std::cout << name;
+            if (++i < n_class) std::cout << ", ";
+        }
+        std::cout << std::endl;
+
+        return RT_Value();
+    }
+
+    // list builtin functions
+    RT_Value builtin_help(Runtime* rt, std::vector<RT_Value*> args) {
+        int i = 0;
+        int n_func = rt->builtin_func.size();
+        for (auto &[name, _] : rt->builtin_func) {
+            std::cout << name;
+            if (++i < n_func) std::cout << ", ";
+        }
+        std::cout << std::endl;
+
+        return RT_Value();
+    }
+
     // built in function
     RT_Value builtin_println(Runtime* rt, std::vector<RT_Value*> args) {
         for (const auto& arg : args) {
@@ -106,9 +132,11 @@ namespace register_ns {
         void register_to_rt(Runtime *rt) {
             using namespace built_in_function;
             auto reg = std::make_unique<builtin_register> ();
-            reg->push_back("println" ,  builtin_println,
-                           "func_info", builtin_print_func_args,
-                           "info",      builtin_print_statue);
+            reg->push_back("help",        builtin_help,
+                           "println" ,    builtin_println,
+                           "func_info",   builtin_print_func_args,
+                           "class_table", builtin_class_table,
+                           "info",        builtin_print_statue);
             reg->_register(rt);
         }
     };

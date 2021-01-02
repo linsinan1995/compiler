@@ -1,7 +1,15 @@
 f(1,2)
-func f(a, b) { return a + b }
+func f(a, b) {
+    return a + b
+}
+
 f(-1,2)
-if (1+2 >= 3) { z = 3 } else { z = 2 } z
+if (1+2 >= 3) {
+    z = 3
+} else {
+    z = 2
+}
+z
 func f(a, b) { return a + b }
 func f2(a, b) { if (a > b) { c = a+b } else { c = 0 } return c } # branching
 f2(f(1,2),1)
@@ -26,22 +34,22 @@ info() # customized built-in function
 
 class MyVar {
     inc = 1;
-    val = 10;
+    m_val = 10;
 
     func inc(x) {
-        val = val + 1
+        m_val = m_val + 1
     }
 
     func get_val() {
-        return val
+        return m_val
     }
 
     func add_val_if_gt_inc(x) {
 
-        if (x > val) {
-            x = x + val
+        if (x > m_val) {
+            x = x + m_val
         } else {
-            val = val + inc
+            m_val = m_val + inc
             inc()
         }
         return x;
@@ -56,5 +64,5 @@ x = 10
 my_var.add_val_if_gt_inc(x)
 my_var.add_val_if_gt_inc(x+10)
 my_var.get_val()
-my_var.val
+my_var.m_val
 

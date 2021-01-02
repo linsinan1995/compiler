@@ -105,21 +105,21 @@ const char *code7 =
 const char *code8 =
         "class MyVar {\n"
         "    inc = 1\n"
-        "    val = 10\n"
+        "    m_val = 10\n"
         "\n"
         "    func inc() {\n"
-        "        val = val + 1\n"
+        "        m_val = m_val + 1\n"
         "    }\n"
         "\n"
         "    func get_val() {\n"
-        "        return val\n"
+        "        return m_val\n"
         "    }\n"
         "\n"
         "    func add_val_if_gt_inc(x) {\n"
-        "        if (x > val) {\n"
-        "            x = x + val\n"
+        "        if (x > m_val) {\n"
+        "            x = x + m_val\n"
         "        } else {\n"
-        "            val = val + inc\n"
+        "            m_val = m_val + inc\n"
         "            inc()    \n"
         "        }\n"
         "        return x\n"
@@ -135,7 +135,7 @@ const char *code8 =
         "x = x + 5\n"
         "my_var.add_val_if_gt_inc(x)\n"
         "my_var.get_val()\n"
-//        "my_var.val = 50\n"
+//        "my_var.m_val = 50\n"
         "my_var.inc()\n"
         "my_var.get_val()\n"
         "my_var.inc()\n"
@@ -143,8 +143,8 @@ const char *code8 =
         "MyVar my_var_2\n" //
         "my_var_2.get_val()\n"
         "my_var.get_val()\n"
-        "my_var_2.val\n"
-        "my_var.val\n"
+        "my_var_2.m_val\n"
+        "my_var.m_val\n"
         "";
 
 
@@ -163,7 +163,7 @@ void driver(std::unique_ptr<Parser> &parser, AST_Interpreter& visitor) {
     for (auto &expr : v) {
         visitor.evaluate(*expr);
         if (!visitor.is_null())
-            std::cout << *visitor.val << "\n";
+            std::cout << *visitor.m_val << "\n";
     }
     visitor.rt->clear();
 }

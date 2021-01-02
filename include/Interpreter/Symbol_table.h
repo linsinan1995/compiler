@@ -33,6 +33,7 @@ struct Global_Class_Entry {
 using ptr_Gloabl_Class_Entry = std::unique_ptr<Global_Class_Entry>;
 
 struct Global_Class_Table {
+    int size();
     void insert(const std::string&, ptr_Gloabl_Class_Entry entry);
     Global_Class_Entry* get(const std::string&);
     std::unordered_map<std::string, ptr_Gloabl_Class_Entry> class_map;

@@ -55,7 +55,7 @@ public:
     v_expr_ptr  parse();
     void read(const char *code);
     explicit Parser(std::unique_ptr<Lexer>);
-    static std::unique_ptr<Parser> make_parser(const char*);
+    static std::unique_ptr<Parser> make_parser(const char *code = nullptr);
 };
 
 

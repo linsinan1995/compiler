@@ -23,6 +23,11 @@ Lexer::Lexer(const char * code) : src_code(code)
     {
     }
 
+inline
+Lexer::Lexer()
+{
+}
+
 std::unique_ptr<Token> Lexer::next() {
     auto token = std::make_unique<Token>();
 
@@ -148,7 +153,7 @@ void Lexer::ambigious_operator(Token* token) {
 }
 
 std::unique_ptr<Lexer> Lexer::make_lexer(const char *code) {
-    return std::make_unique<Lexer>(code);
+    return code ? std::make_unique<Lexer>(code) : std::make_unique<Lexer> ();
 }
 
 void Lexer::load(const char *m_code) {
@@ -169,18 +174,25 @@ void Lexer::string(Token *token) {
     }
 
     // eat right quote
-    eat();
+    if (ne == '\"')
+        eat();
+    else {
+        token->kind = k_unexpected;
+        // add left quote
+        -- (token->lexeme.content);
+        ++ (token->lexeme.len);
+    }
 }
 
 void Lexer::check_costumized_class_decl(Token *tok) {
-    if (registered_class.find(raw_to_string(tok->lexeme)) !=
+    if (registered_class.find(tok->lexeme.to_string()) !=
         registered_class.end()) {
         tok->kind = k_class_decl;
     }
 }
 
 void Lexer::register_class(Token *tok) {
-    registered_class.insert(raw_to_string(tok->lexeme));
+    registered_class.insert(tok->lexeme.to_string());
 }
 
 bool Lexer::is_uni_operator(Token *token, char op) {

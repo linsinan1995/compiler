@@ -54,7 +54,7 @@ ptr_expr Parser::handle_class_statement() {
     if (cur_token->kind != k_var) return panic_nptr("Parsing Error: The parser expects a k_var, "
                                                     "but get %s\n", names_kind[cur_token->kind]);
 
-    class_expr->type_name = raw_to_string(cur_token->lexeme);
+    class_expr->type_name = cur_token->lexeme.to_string();
     lexer->register_class(cur_token.get());
 
     next();
@@ -129,14 +129,14 @@ ptr_expr Parser::handle_general_statement() {
                               "expression\n");
         }
 
-        auto dot_var_name = raw_to_string(cur_token->lexeme);
+        auto dot_var_name = cur_token->lexeme.to_string();
         // eat k_var
         next();
 
         // check it is a member variable or member function
         if (cur_token->kind == k_open_paren) {
             auto object_call_stmt = std::make_unique<Class_Call_AST> ();
-            object_call_stmt->obj_name = raw_to_string(prev_tok->lexeme);
+            object_call_stmt->obj_name = prev_tok->lexeme.to_string();
             object_call_stmt->func_name = std::move(dot_var_name);
             // reset prev_tok before parsing expression!
             prev_tok = nullptr;
@@ -145,7 +145,7 @@ ptr_expr Parser::handle_general_statement() {
             return object_call_stmt;
         } else {
             auto object_var_stmt = std::make_unique<Class_Var_AST> ();
-            object_var_stmt->obj_name = raw_to_string(prev_tok->lexeme);
+            object_var_stmt->obj_name = prev_tok->lexeme.to_string();
             object_var_stmt->var_name = std::move(dot_var_name);
             prev_tok = nullptr;
             return object_var_stmt;
@@ -158,7 +158,7 @@ ptr_expr Parser::handle_general_statement() {
 
 ptr_expr Parser::handle_class_decl() {
     auto expr = std::make_unique<Class_Decl_AST>();
-    expr->class_name = raw_to_string(cur_token->lexeme);
+    expr->class_name = cur_token->lexeme.to_string();
 
     // eat class name
     next();
@@ -168,7 +168,7 @@ ptr_expr Parser::handle_class_decl() {
                           "The parser expects a k_var, but get %s\n",
                           names_kind[cur_token->kind]);
 
-    expr->var_name = raw_to_string(cur_token->lexeme);
+    expr->var_name = cur_token->lexeme.to_string();
     next();
     return expr;
 }
@@ -190,8 +190,7 @@ v_expr_ptr Parser::parse() {
 
 inline
 Parser::Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer))
-    {
-    }
+{}
 
 // block -> { expr_1 \n expr_2 \n ... expr_3 \n }
 ptr_Block_AST Parser::parse_block() {
@@ -221,7 +220,7 @@ ptr_Function_proto_AST Parser::parse_func_proto() {
                           names_kind[cur_token->kind]);
     }
 
-    proto->name = raw_to_string(cur_token->lexeme);
+    proto->name = cur_token->lexeme.to_string();
     // eat func name
     next();
 
@@ -411,7 +410,7 @@ ptr_expr Parser::parse_unary_expr() {
         case k_var:
             if (peek() == '(') {
                 auto call_expr = std::make_unique<Function_call_AST> ();
-                call_expr->name = raw_to_string(cur_token->lexeme);
+                call_expr->name = cur_token->lexeme.to_string();
                 // eat func name
                 next();
                 call_expr->args = parse_func_call_expr();
@@ -449,7 +448,7 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
 ptr_expr Parser::parse_atom() {
     if (cur_token->kind == k_open_paren) {
         auto call_expr = std::make_unique<Function_call_AST> ();
-        call_expr->name = raw_to_string(prev_tok->lexeme);
+        call_expr->name = prev_tok->lexeme.to_string();
         prev_tok = nullptr;
 
         call_expr->args = std::move(parse_func_call_expr());
@@ -466,8 +465,8 @@ ptr_expr Parser::parse_expr(int prev_prec) {
         expr = parse_atom();
         prev_tok = nullptr;
     } else {
-        expr = std::make_unique<Unary_expr_AST> (parse_unary_expr());
-        if (!expr) return nullptr;
+        expr = std::move(parse_unary_expr());
+        if (!expr) { return nullptr; }
     }
 
     while (lexer->is_op(cur_token->kind)) {
@@ -480,9 +479,11 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
         // eat op
         next();
+        auto rhs = parse_expr(cur_prec+1);
+        if (!rhs) return nullptr;
         auto bi_expr = std::make_unique<Binary_expr_AST> (std::move(expr),
                                                           op,
-                                                          parse_expr(cur_prec+1));
+                                                          std::move(rhs));
         expr = std::move(bi_expr); // !
     }
     return expr;
@@ -490,14 +491,14 @@ ptr_expr Parser::parse_expr(int prev_prec) {
 
 inline
 ptr_Float_point_AST Parser::parse_fp_expr() {
-    auto expr = std::make_unique<Float_point_AST> (get_val_tok_fp(cur_token.get()));
+    auto expr = std::make_unique<Float_point_AST> (cur_token->to_fp());
     next();
     return expr;
 }
 
 inline
 ptr_Integer_AST Parser::parse_int_expr() {
-    auto expr = std::make_unique<Integer_AST> (get_val_tok_int(cur_token.get()));
+    auto expr = std::make_unique<Integer_AST> (cur_token->to_int());
     next();
     return expr;
 }
@@ -531,13 +532,13 @@ ptr_expr Parser::parse_neg_number_expr() {
     next();
 
     if (cur_token->kind == k_int) {
-        auto expr = std::make_unique<Integer_AST> (-1 * get_val_tok_int(cur_token.get()));
+        auto expr = std::make_unique<Integer_AST> (-1 * cur_token->to_int());
         next();
         return expr;
     }
 
     if (cur_token->kind == k_fp) {
-        auto expr = std::make_unique<Float_point_AST> (-1 * get_val_tok_fp(cur_token.get()));
+        auto expr = std::make_unique<Float_point_AST> (-1 * cur_token->to_int());
         next();
         return expr;
     }
@@ -587,7 +588,8 @@ ptr_expr Parser::parse_matrix_expr() {
 }
 
 std::unique_ptr<Parser> Parser::make_parser(const char *code) {
-    return std::make_unique<Parser> (Lexer::make_lexer(code));
+    return code ? std::make_unique<Parser> (Lexer::make_lexer(code)) :
+           std::make_unique<Parser> (Lexer::make_lexer());
 }
 
 void Parser::read(const char *code) {
@@ -608,8 +610,7 @@ ptr_expr Parser::read_one_statement() {
         case kw_def:       expr = handle_def_statement();      break;
         case k_EOF:        return nullptr;
         case k_unexpected: return panic_nptr("Parsing Error: Unexpected token "
-                                             "in read_one_statement! Token literal %s\n",
-                                             raw_to_string(cur_token->lexeme).c_str());
+                                             "in read_one_statement!\n");
         }
 
     if (cur_token->kind == k_semi) {

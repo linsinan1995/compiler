@@ -43,7 +43,8 @@ public:
     void register_class(Token*);
     bool is_op(Kind k);
 public:
+    Lexer();
     explicit Lexer(const char * code) ;
-    static ptr_lexer make_lexer(const char *);
+    static ptr_lexer make_lexer(const char *code = nullptr);
 };
 #endif //COMPILER_LEXER_H

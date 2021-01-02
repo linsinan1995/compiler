@@ -40,11 +40,12 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
     - string
     - customized class
   - Built-in functions
+  - Error handling
   - Memory management
     - memory pool with memory alignment
+  - Simple shell
 
 - To do
-  - Better error handling
   - MLIR IR emitter
   - Code Gen
     - control flow
@@ -55,7 +56,6 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   - code redesign
     - better scoping
     - performance bottleneck (llvm::StringRef, llvm::cl ... )
-    - static switch/ magic switch
     - better solution for handling intermediate result
     - better Matrix class design -> cv::Mat
   - Memory management
@@ -292,7 +292,7 @@ int main() {
     for (auto &&expr : v) {
         interpreter.evaluate(*expr);
         if (!interpreter.is_null())
-            std::cout << interpreter.val << "\n";
+            std::cout << interpreter.m_val << "\n";
     }
 }
 ```
@@ -363,12 +363,12 @@ class Value {
     ...
 
     // placement new & tagged union for storing object in union
-    explicit RT_Value(Mat val) : type(MATRIX) { new (&data.matrix) Mat(std::move(val)); };
+    explicit RT_Value(Mat m_val) : type(MATRIX) { new (&data.matrix) Mat(std::move(m_val)); };
 
     // do not forget that we break the rule of five
-    RT_Value(const RT_Value& val);  // new (&data.matrix) Mat(val)
-    RT_Value(RT_Value&& val) noexcept;
-    RT_Value &operator=(RT_Value val);
+    RT_Value(const RT_Value& m_val);  // new (&data.matrix) Mat(m_val)
+    RT_Value(RT_Value&& m_val) noexcept;
+    RT_Value &operator=(RT_Value m_val);
 }
 ```
 
@@ -454,7 +454,7 @@ void AST_Printer::visit_mat(Matrix_AST &expr) {
             if (i == 0) {
                 os << ind.get_indent();
             }
-            os << inner->val << " ";
+            os << inner->m_val << " ";
         } else {
             Expression_AST &mat = *(expr.values[i]);
             visit_mat(dynamic_cast<Matrix_AST&> (mat));
