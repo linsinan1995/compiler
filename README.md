@@ -27,6 +27,8 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   * [RAII switch helper](#raii-switch-helper)
   * [Variadic template for pushing data elegantly](#variadic-template-for-pushing-data-elegantly)
   * [X macro for managing enum value](#x-macro-for-managing-enum-value)
+  * [Parameter unpacking for perfect forwarding and placement new](#parameter-unpacking-for-perfect-forwarding-and-placement-new)
+  * [Generic warning printer](#generic-warning-printer)
 
 # Work List
 - Finished
@@ -557,3 +559,89 @@ reg->push_back(func_name,         builtin_println,
 ## X macro for managing enum value
 
 see include/Kind.def and include/Enum.h
+
+
+## Parameter unpacking for perfect forwarding and placement new
+```c++
+...
+template <typename ...Args>
+RT_Value* alloc_var(Args &&... args)  { return pool_var.alloc(std::forward<Args>(args)...); }
+...
+
+
+template <typename... Args>
+T *alloc(Args &&... args) {
+    ...
+
+    // get the storage for type T.
+    T *result = cur_item->get_data();
+    // construct the object.
+    new (result) T(std::forward<Args>(args)...);
+    return result;
+}
+```
+
+## Generic warning printer
+
+1. Return value is expected to be an object
+```c++
+template <typename Ret_Type>
+static Ret_Type panic_type(char const* const format, ...) {
+    cmd_color_red();
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    cmd_color_reset();
+    return {};
+}
+
+// example : return an empty object
+...
+if (func_name->is_not_type<STRING>()) {
+    return panic_type<RT_Value>("Runtime Error: Wrong argument type in "
+                                "builtin_print_func_args! It required string but got %s "
+                                "arguments\n", names_rt_val_kind[func_name->type]);
+}
+...
+```
+
+2. Return value is expected to be a pointer
+```c++
+static std::nullptr_t panic_nptr(char const* const format, ...) {
+    cmd_color_red();
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    cmd_color_reset();
+    return nullptr;
+}
+
+// example : return a nullptr
+...
+if (cur_token->kind == k_EOF)
+    return panic_nptr("Parsing Error: Fail to parse return expr in parse_def_func_expr! "
+                      "The parser expects return key word\n");
+...
+```
+
+3. A deadly error
+```c++
+[[noreturn]] static void panic_noreturn(char const* const format, ...) {
+    cmd_color_red();
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    cmd_color_reset();
+    exit(EXIT_FAILURE);
+}
+
+// error in memory allocation
+...
+auto *ptr_buffer = static_cast<string_buffer*> (malloc(sizeof(string_buffer)));
+if (ptr_buffer == nullptr)
+    panic_noreturn("Error: Fail to allocate memory for string_buffer!\n");
+...
+```

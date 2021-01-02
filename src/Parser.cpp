@@ -272,8 +272,9 @@ ptr_Function_AST Parser::parse_def_func_expr(ptr_Function_proto_AST proto) {
         }
         func->func_body->v_expr.emplace_back(read_one_statement());
 
-        if (cur_token->kind == k_EOF) return panic_nptr("Parsing Error: Fail to parse return expr in parse_def_func_expr! "
-                                                        "The parser expects return key word\n");
+        if (cur_token->kind == k_EOF)
+            return panic_nptr("Parsing Error: Fail to parse return expr in parse_def_func_expr! "
+                              "The parser expects return key word\n");
     }
     // eat close curly
     consume(k_close_curly, "parse_def_func_expr");
@@ -439,7 +440,6 @@ std::vector<ptr_Expression_AST>  Parser::parse_func_call_expr(){
     }
 
     if (cur_token->kind != k_close_paren) {
-
         return panic_type<std::vector<ptr_Expression_AST>> (
                 "Parsing Error: Missing close paren in parse_unary_expr! "
                 "The parser expects an close paren, but get %s\n",
