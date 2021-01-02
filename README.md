@@ -13,7 +13,7 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   * [1. define a variable](#1-define-a-variable)
   * [2. control flow](#2-control-flow)
   * [3. define a function](#3-define-a-function)
-  * [4. matrix operation](#4-matrix-operation)
+  * [4. error handling](#4-error-handling)
   * [5. built-in function](#5-built-in-function)
   * [6. customized class](#6-customized-class)
 - [Lexing](#lexing)
@@ -104,7 +104,7 @@ Some demo for representing the features of this language.
   <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_fun.png" img width="500">
 </p>
 
-## 4. matrix operation
+## 4. error handling
 <p align="center">
   <img src="https://github.com/linsinan1995/compiler/blob/master/pic/error_handling.png" img>
 </p>
