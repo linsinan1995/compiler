@@ -1,6 +1,20 @@
+/******************************************************************* 
+ * 
+ *    @Time           @Author       @Description
+ * ------------      ---------      -----------
+ * 2021-01-02 20:14  Lin Sinan         None
+ *
+ * @File    :   String_buffer.cpp
+ * @Contact :   mynameisxiaou@gmail.com
+ * @github  :   https://github.com/linsinan1995
+ * @usage   :
+ *
+ ******************************************************************/
+
 //
 // Created by Lin Sinan on 2021-01-02.
 //
+
 #include "String_buffer.h"
 
 string_buffer* string_buffer::make_buffer(size_t initial_capacity, float grow_factor) {

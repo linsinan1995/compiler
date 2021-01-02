@@ -8,6 +8,7 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
 # Table of Contents
 - [Intro](#intro)
 - [Work List](#work-list)
+- [How to build](#How-to-build)
 - [Lexing](#lexing)
 - [Parsing](#parsing)
 - [Execution](#execution)
@@ -43,7 +44,7 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   - Error handling
   - Memory management
     - memory pool with memory alignment
-  - Simple shell
+  - Simple interactive ide
 
 - To do
   - MLIR IR emitter
@@ -62,6 +63,21 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
     - better garbage collection
     - better memory layout for RT_Value
   - Benchmarking
+
+# How to build
+
+```
+git clone https://github.com/linsinan1995/compiler.git
+cd compiler
+mkdir build
+cd build
+cmake ..
+
+// build ide only
+cmake --build . -j 4 -t ide
+// build all
+// cmake --build . -j 4
+```
 
 # Lexing
 

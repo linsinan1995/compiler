@@ -65,6 +65,7 @@ template<> void main_loop<T_INTERPRETER>() {
 
     do {
         printf(">> ");
+        fflush(stdin);
         char *p_read_chars = ptr_reader->read();
         if (strcmp(p_read_chars, "quit\n") == 0) break;
 
