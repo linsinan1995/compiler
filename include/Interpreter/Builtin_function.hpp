@@ -91,7 +91,7 @@ namespace built_in_function {
         std::cout << "[context level]: " << rt->sym_table.size() << "\n";
         std::cout << "[local vars]: \n";
         for (auto &[var, val] : rt->sym_table.back().vars) {
-            std::cout << var << " : " << val << "\n";
+            std::cout << var << " : " << *val << "\n";
         }
 
         for (auto &[name, func] : rt->sym_table.back().funcs) {

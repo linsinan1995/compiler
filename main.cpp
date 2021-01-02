@@ -32,11 +32,11 @@ template<> void main_loop<T_LEXER>() {
     do {
         printf(">> ");
         char *p_read_chars = ptr_reader->read();
+        if (!p_read_chars) continue;
         if (strcmp(p_read_chars, "quit\n") == 0) break;
         lexer->load(p_read_chars);
         do_lexing(lexer);
-        if (p_read_chars != nullptr)
-            free(p_read_chars);
+        free(p_read_chars);
     } while (true);
 
 }

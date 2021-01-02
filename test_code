@@ -1,68 +1,103 @@
-f(1,2)
-func f(a, b) {
-    return a + b
-}
+# define a variable
+var a = 0
+b = 0 # no declaration keyword is allowed
+info()
 
-f(-1,2)
+# control flow
+a = 1
 if (1+2 >= 3) {
     z = 3
 } else {
     z = 2
 }
-z
-func f(a, b) { return a + b }
-func f2(a, b) { if (a > b) { c = a+b } else { c = 0 } return c } # branching
-f2(f(1,2),1)
-f2(2,1) < f(1,2)
-func f2(b, d) { if (a > b) { c = a+b } else { c = 0 } return c }
-func f(z, x) { return z + x }
 
-func multiply(a,b) { return a*b } # generic function
-var c = [[1,2,3] ,[4,5,6], [7,8,9]]
-d = [[1,2],[3,4],[5,6]] # no declaration keyword is allowed
+# define a function
+func bigger(a, b) {
+    # if a > b, return a+b, otherwise return 0;
+    func cmp(a,b) { return a > b }
+    if (cmp(a,b)) {
+        c = a + b
+    } else {
+        c = 0
+    }
+    return c
+}
+
+a = bigger(3,1) # a = 4
+println(a, bigger(a, a+1)) # 4, 0
+
+
+# error handling
+no_this_function(1, 2)
+
+
+# generic function
+func multiply(a,b) {
+    return a*b
+}
+var c = [
+    [1,2,3],
+    [4,5,6],
+    [7,8,9]
+]
+d = [[1,2],[3,4],[5,6]]
 multiply(c,d) # var & var
-multiply(c,[1,1,1]) # var & inst
-multiply(24.2, 10)  # inst & inst
+multiply(c,[1,1,1]) # var & inst matrix
+multiply(24.2, [1,1,1])  # scalar & inst matrix
+multiply(24, 2)  # scalar & scalar
+
 a = [1,2,4]
 a == [1,2,4]
 
-func f(a, b) { return a + b }
-func f2(a, b) { if (a > b) { c = a+b } else { c = 0 } return c } # branching
-f2(f(1,2),1)
-func f(c,d) { return 1 } # function overwrite
-info() # customized built-in function
+# customized built-in function
+info()
 
-class MyVar {
-    inc = 1;
-    m_val = 10;
+func f(x, y, z) { info() }
+f(1,2,3)
 
-    func inc(x) {
-        m_val = m_val + 1
+# get builtin function list
+help()
+
+
+# customized class
+class Add {
+    inc = 10
+    func add(x) {
+        return inc + x
     }
 
-    func get_val() {
-        return m_val
+    func inner_add(x) {
+        inc = inc + x
     }
 
-    func add_val_if_gt_inc(x) {
-
-        if (x > m_val) {
-            x = x + m_val
-        } else {
-            m_val = m_val + inc
-            inc()
-        }
-        return x;
+    func wow() {
+        println("WOW")
     }
 }
 
-MyVar my_var
-my_var.get_inc()
+Add adder
+adder.add(10)
+adder.inner_add(10) # modify member variable
 
-x = 10
+Add adder2
+adder.add(10)
+adder2.add(10) # member variables are isolated in different objects
 
-my_var.add_val_if_gt_inc(x)
-my_var.add_val_if_gt_inc(x+10)
-my_var.get_val()
-my_var.m_val
+# class overload
+class Add {
+    inc = 10
+    func add(x) {
+        return inc + x
+    }
 
+    func inner_minus(x) {
+        inc = inc - x
+    }
+
+    func moew() {
+        println("MOEW")
+    }
+}
+Add add_modified
+add_modified.wow()
+adder.wow()

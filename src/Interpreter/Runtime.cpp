@@ -29,7 +29,10 @@ void Runtime::creat_function(const std::string& name, RT_Function* f) {
 }
 
 Runtime::builtin_func_t Runtime::get_builtin_function(const std::string& name) {
-    return builtin_func[name];
+    if (auto entry = builtin_func.find(name); entry != builtin_func.end()) {
+        return entry->second;
+    }
+    return nullptr;
 }
 
 bool Runtime::has_variable(const std::string& id_name) {
@@ -43,36 +46,6 @@ bool Runtime::has_function(const std::string& name) {
 RT_Function* Runtime::get_function(const std::string &name) {
     return sym_table.back().get_function(name);
 }
-
-//template<typename T>
-//void Runtime::creat_variable(const std::string& name, T m_val,
-//                    typename std::enable_if<!(std::is_pointer<T>::value ||
-//                                              std::is_null_pointer<T>::value)>::type) {
-//    if (!m_val) m_val = allocator->alloc_var();
-//    else      m_val = allocator->alloc_var(*m_val);
-//
-//    m_val->occupied = true;
-//
-//    // Replace & deallocate previous value
-//    if (auto entry = sym_table.back().vars.find(name); entry != sym_table.back().vars.end()) {
-//        allocator->dealloc_var(entry->second);
-//    }
-//
-//    sym_table.back().insert(name, m_val);
-//}
-//void Runtime::creat_variable(const std::string& name, RT_Value *m_val) {
-//    if (!m_val) m_val = allocator->alloc_var();
-//    else      m_val = allocator->alloc_var(*m_val);
-//
-//    m_val->occupied = true;
-//
-//    // Replace & deallocate previous value
-//    if (auto entry = sym_table.back().vars.find(name); entry != sym_table.back().vars.end()) {
-//        allocator->dealloc_var(entry->second);
-//    }
-//
-//    sym_table.back().insert(name, m_val);
-//}
 
 RT_Value* Runtime::get_variable(const std::string &name) {
     return sym_table.back().get_variable(name);

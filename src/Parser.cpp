@@ -50,9 +50,14 @@ ptr_expr Parser::handle_class_statement() {
 
     // eat class keyword
     next();
+    if (cur_token->kind == k_class_decl) {
+        panic("Parsing warning: Overloaded a class!\n");
+        cur_token->kind = k_var;
+    }
 
-    if (cur_token->kind != k_var) return panic_nptr("Parsing Error: The parser expects a k_var, "
-                                                    "but get %s\n", names_kind[cur_token->kind]);
+    if (cur_token->kind != k_var)
+        return panic_nptr("Parsing Error: The parser expects a k_var, "
+                          "but get %s\n", names_kind[cur_token->kind]);
 
     class_expr->type_name = cur_token->lexeme.to_string();
     lexer->register_class(cur_token.get());

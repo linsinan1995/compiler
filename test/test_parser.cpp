@@ -118,6 +118,21 @@ const char *code8 =
         "my_var.m_val\n"
         "";
 
+const char *code9 =
+        "func bigger(a, b) {\n"
+        "    # if a > b, return a+b, otherwise return 0;\n"
+        "    func cmp(a,b) { return a > b }\n"
+        "    \n"
+        "    if (cmp(a,b)) {\n"
+        "        c = a + b\n"
+        "    } else {\n"
+        "        c = 0\n"
+        "    }\n"
+        "    return c\n"
+        "}"
+        "bigger(1,2)\n"
+        "bigger(2,2)\n";
+
 void driver(std::unique_ptr<Parser> &parser, AST_Printer& visitor) {
     std::vector<std::unique_ptr<Expression_AST>> v = parser->parse();
     if (v.empty()) return ;
@@ -182,5 +197,9 @@ int main() {
 
     TEST_NAME("Class")
     parser = Parser::make_parser(code8);
+    driver(parser, printer);
+
+    TEST_NAME("BU")
+    parser = Parser::make_parser(code9);
     driver(parser, printer);
 }

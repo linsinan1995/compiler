@@ -147,6 +147,21 @@ const char *code8 =
         "my_var.m_val\n"
         "";
 
+const char *code9 =
+        "func bigger(a, b) {\n"
+        "    # if a > b, return a+b, otherwise return 0;\n"
+        "    func cmp(a,b) { return a > b }\n"
+        "    \n"
+        "    if (cmp(a,b)) {\n"
+        "        c = a + b\n"
+        "    } else {\n"
+        "        c = 0\n"
+        "    }\n"
+        "    return c\n"
+        "}"
+        "bigger(10,2)\n"
+        "bigger(1,8)\n"
+        "bigger(2,2)\n";
 
 struct builtin_register {
     std::vector<std::pair<std::string, Runtime::builtin_func_t>> funcs;
@@ -192,7 +207,6 @@ RT_Value builtin_println(Runtime* rt, const std::vector<RT_Value>& args) {
 int main() {
     std::unique_ptr<Parser> parser = Parser::make_parser(code);
     AST_Interpreter interpreter {};
-    std::cout << "sizeof(RT_Value): " << sizeof(RT_Value) <<std::endl;
 
     TEST_NAME("simple def")
     driver(parser, interpreter);
@@ -223,6 +237,10 @@ int main() {
 
     TEST_NAME("Class")
     parser = Parser::make_parser(code8);
+    driver(parser, interpreter);
+
+    TEST_NAME("Class")
+    parser = Parser::make_parser(code9);
     driver(parser, interpreter);
 }
 

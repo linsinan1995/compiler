@@ -100,6 +100,14 @@ RT_Value RT_Value::operator-(RT_Value rhs) {
         return RT_Value(std::move(mat));
     }
 
+    if (is_type<FP>() && rhs.is_type<MATRIX>()) {
+        Mat mat;
+        mat.data = rhs.data.matrix.data;
+        mat.dim = rhs.data.matrix.dim;
+        for (float & i : mat.data) i -= data.fp;
+        return RT_Value(std::move(mat));
+    }
+
     if (is_type<MATRIX>() && rhs.is_type<MATRIX>()) {
         if (data.matrix.dim.size() != rhs.data.matrix.dim.size())
             return panic_type<RT_Value>("Runtime Error: wrong shape of matrix!\n");
@@ -177,13 +185,19 @@ RT_Value RT_Value::operator*(RT_Value rhs) {
         return RT_Value(data._int * rhs.data._int);
     }
 
-
-    if ((is_type<FP>() && rhs.is_type<MATRIX>()) ||
-        (is_type<MATRIX>() && rhs.is_type<FP>())) {
+    if (is_type<MATRIX>() && rhs.is_type<FP>()) {
         Mat mat;
         mat.data = data.matrix.data;
         mat.dim = data.matrix.dim;
         for (float & i : mat.data) i *= rhs.data.fp;
+        return RT_Value(std::move(mat));
+    }
+
+    if (is_type<FP>() && rhs.is_type<MATRIX>()) {
+        Mat mat;
+        mat.data = rhs.data.matrix.data;
+        mat.dim = rhs.data.matrix.dim;
+        for (float & i : mat.data) i *= data.fp;
         return RT_Value(std::move(mat));
     }
 
@@ -546,7 +560,7 @@ std::ostream &operator<<(std::ostream &os, const RT_Value &val) {
             else std::cout << "[Member variables]:\n";
 
             for (auto [var, val] : val.data.obj.member_vars) {
-                std::cout << var << " = " << val << "\n";
+                std::cout << var << " = " << *val << "\n";
             }
 
             if (val.data.obj.member_functions.empty()) std::cout << "No member functions!\n";

@@ -102,9 +102,9 @@ struct Function_proto_AST : public Expression_AST {
 };
 
 struct Function_AST : public Expression_AST {
-    std::unique_ptr<Block_AST>           func_body;
-    std::unique_ptr<Expression_AST>      return_expr;
-    std::unique_ptr<Function_proto_AST>  args_with_func_name;
+    std::shared_ptr<Block_AST>           func_body;
+    std::shared_ptr<Expression_AST>      return_expr;
+    std::shared_ptr<Function_proto_AST>  args_with_func_name;
 
     void accept(AST_Visitor &visitor) override;
 };

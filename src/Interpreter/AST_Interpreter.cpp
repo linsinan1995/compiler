@@ -160,6 +160,7 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
     for (auto &arg : expr.args) {
         arg->accept(*this);
         v_args.push_back(m_val);
+        if (!m_val) return;
         m_val = nullptr;
     }
 
@@ -197,14 +198,13 @@ void AST_Interpreter::visit_func_call(Function_call_AST &expr) {
 void AST_Interpreter::visit_func(Function_AST &expr) {
     auto func = rt->allocator->alloc_func();
     for (auto & arg : expr.args_with_func_name->args) {
-        func->params_name.emplace_back(std::move(arg->name));
+        func->params_name.push_back(arg->name);
     }
 
-    func->block = std::move(expr.func_body);
-    func->ret = std::move(expr.return_expr);
+    func->block = expr.func_body;
+    func->ret = expr.return_expr;
 
     rt->creat_function(expr.args_with_func_name->name, func);
-    expr.args_with_func_name = nullptr;
     reset();
 }
 
@@ -268,6 +268,8 @@ void AST_Interpreter::visit_class(Class_AST &expr) {
     // functions
     for (auto & f : expr.funcs) {
         RT_Function *mem_f = rt->allocator->alloc_func();
+        // todo
+        //      inefficient code! How to avoid copying?
         for (auto & arg : f->args_with_func_name->args) {
             mem_f->params_name.push_back(arg->name);
         }
@@ -332,6 +334,10 @@ void AST_Interpreter::visit_class_var(Class_Var_AST &expr) {
 
 void AST_Interpreter::visit_class_call(Class_Call_AST &expr) {
     auto obj = rt->get_variable(expr.obj_name);
+    if (!obj) {
+        panic("Runtime Error: Object %s is not found!\n", expr.obj_name.c_str());
+        return;
+    }
 
     if (obj->is_not_type<OBJECT>()) {
         panic("Runtime Error : Object %s has not been defined!\n",
@@ -354,6 +360,7 @@ void AST_Interpreter::visit_class_call(Class_Call_AST &expr) {
     for (auto &arg : expr.args) {
         arg->accept(*this);
         v_args.push_back(m_val);
+        if (!m_val) return;
         m_val = nullptr;
     }
 

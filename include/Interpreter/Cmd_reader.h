@@ -11,7 +11,7 @@
 namespace cmd_reader_ns {
 
 class matcher_stack {
-    static constexpr size_t PAREN_MAX_NUMBER = 30;
+    static constexpr size_t PAREN_MAX_NUMBER = 50;
 public:
     size_t size();
     bool   empty();
@@ -34,7 +34,7 @@ void matcher_stack::push(char c) {
 class cmd_reader {
     void handler_ill_input();
 public:
-    char*  read();
+    char* read();
     cmd_reader();
 
     static std::unique_ptr<cmd_reader> make_cmd_reader();
@@ -51,7 +51,8 @@ void   matcher_stack::clear()  { top = 0; }
 bool matcher_stack::consume(char c) {
     if (empty()) return false;
     if (((data[top - 1] == '(') && (c == ')')) ||
-        ((data[top - 1] == '{') && (c == '}')) ) {
+        ((data[top - 1] == '{') && (c == '}')) ||
+        ((data[top - 1] == '[') && (c == ']'))) {
         -- top;
         return true;
     }
@@ -76,10 +77,12 @@ char* cmd_reader::read() {
             default: break;
             case '(':
             case '{':
+            case '[':
                 paren_matcher.push(c);
                 break;
             case ')':
             case '}':
+            case ']':
                 if (!paren_matcher.consume(c)) {
                     handler_ill_input();
                     return nullptr;
