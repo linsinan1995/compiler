@@ -7,7 +7,7 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
 
 # Table of Content
 - [Intro](#intro)
-- [Feature](#feature)
+- [Work List](#work-list)
 - [How to build](#how-to-build)
 - [Interpreter](#interpreter)
   * [1. define a variable](#1-define-a-variable)
@@ -28,21 +28,50 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
   * [X macro for managing enum value](#x-macro-for-managing-enum-value)
   * [Parameter unpacking for perfect forwarding and placement new](#parameter-unpacking-for-perfect-forwarding-and-placement-new)
   * [Generic warning printer](#generic-warning-printer)
-  * [Template type alignment for clang and gcc](#template-type-alignment-for-clang-and-gcc)
 
-# Feature
-- [x] Interpreter
-  - [x] arthmetic
-  - [x] control flow
-  - [x] customized class
-  - [x] matrix, string, float
-  - [x] built-in function registered from C++ interface
-  - [ ] indexing
-- [ ] JIT
-- [ ] AoT
-- [ ] Code optimization
-- [ ] better garbarge collection
-- [ ] performance and memory optimization
+# Work List
+- Finished
+  - Lexer
+  - Parser
+    - Recursive descend
+    - Precedence
+  - Execution
+    - Interpreter
+        - symbol table & global class table
+        - customized class / reload-able class
+        - control flow
+    - AoT compilation
+        - codegen (partial)
+  - Code re-organize
+    - Visitor pattern for AST
+  - Data type
+    - matrix
+    - fp
+    - string
+    - customized class
+  - Built-in functions
+  - Error handling
+  - Memory management
+    - memory pool with memory alignment
+  - Simple interactive ide
+
+- To do
+  - MLIR IR emitter
+  - Code Gen
+    - control flow
+    - mutable variable
+  - JIT
+  - Rich data type
+    - indexing
+  - code redesign
+    - better scoping
+    - performance bottleneck (llvm::StringRef, llvm::cl ... )
+    - better solution for handling intermediate result
+    - better Matrix class design -> cv::Mat
+  - Memory management
+    - better garbage collection
+    - better memory layout for RT_Value
+  - Benchmarking
 
 # How to build
 
@@ -59,7 +88,14 @@ cmake --build . -j 4 -t ide
 // cmake --build . -j 4
 ```
 # Interpreter
+Runtime design:
+
+<p align="center">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/res.png" img width="400">
+</p>
+
 Some demo for representing the features of this language.
+
 ## 1. define a variable
 <p align="center">
   <img src="https://github.com/linsinan1995/compiler/blob/master/pic/define_a_var.png" img width="400">
@@ -476,9 +512,10 @@ if (ptr_buffer == nullptr)
     panic_noreturn("Error: Fail to allocate memory for string_buffer!\n");
 ...
 ```
+
 ## Template type alignment for clang and gcc
 
-Gcc and clang use different ways to specify the alignment requirement. However, somehow, clang pretends to be gcc, and also has macro `__GNU__`. Here is my solution.
+Gcc and clang use different ways to specify the alignment requirement. However, somehow, clang pretends to be gcc, and also has macro __GNU__. Here is my solution.
 
 ```c++
 #if defined(__clang__)
