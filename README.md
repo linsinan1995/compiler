@@ -62,7 +62,7 @@ cmake --build . -j 4 -t ide
 Runtime design:
 
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/res.png" img width="400">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/runtime.png" img width="400">
 </p>
 
 Some demo for representing the features of this language.
