@@ -32,16 +32,18 @@ Design a language with interpreter, JIT and AoT compilation execution modes. It 
 
 # Feature
 - [x] Interpreter
-  - [x] arthmetic
+  - [x] arithmetic operation
+  - [x] function
   - [x] control flow
   - [x] customized class
   - [x] matrix, string, float
   - [x] built-in function registered from C++ interface
   - [ ] indexing
+  - [ ] pass-by-value and pass-by-reference
 - [ ] JIT
 - [ ] AoT
 - [ ] Code optimization
-- [ ] better garbarge collection
+- [ ] better garbage collection
 - [ ] performance and memory optimization
 
 # How to build
@@ -62,7 +64,7 @@ cmake --build . -j 4 -t ide
 Runtime design:
 
 <p align="center">
-  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/runtime.png" img width="400">
+  <img src="https://github.com/linsinan1995/compiler/blob/master/pic/runtime.png" img width="600">
 </p>
 
 Some demo for representing the features of this language.
